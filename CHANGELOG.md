@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-12-23
+
 ### Added
 - Initial implementation of changelog parser action
 - Support for reading changelogs from local file paths
@@ -16,4 +18,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep a Changelog format parsing
 - Version extraction and validation
 - Configuration file support
+- CI/CD workflows for testing and releases
 
