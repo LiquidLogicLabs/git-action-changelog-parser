@@ -1,0 +1,40 @@
+name: 'Changelog Parser'
+description: 'Reads and parses CHANGELOG.md files from local paths or remote URLs, following the Keep a Changelog standard'
+inputs:
+  path:
+    description: 'Path to changelog file or URL (defaults to ./CHANGELOG.md). Supports local paths and remote URLs from any source'
+    required: false
+    default: './CHANGELOG.md'
+  token:
+    description: 'Optional authentication token (defaults to github.token). Only used when path is a remote URL that requires authentication'
+    required: false
+  version:
+    description: 'The exact version of the log entry to retrieve or "Unreleased" for the unreleased entry. Defaults to the last version number'
+    required: false
+  validation_level:
+    description: 'Specifies at which level the validation system is set. Can be none, warn, or error'
+    required: false
+    default: 'none'
+  validation_depth:
+    description: 'Specifies how many entries to validate in the CHANGELOG.md file'
+    required: false
+    default: '10'
+  config_file:
+    description: 'Path to a configuration file. If not specified, will look for .changelog-reader.json, .changelog-reader.yml, .changelog-reader.yaml, .changelogrc, or .changelogrc.json in the repository root'
+    required: false
+outputs:
+  version:
+    description: 'Version of the log entry found (e.g., 2.0.0)'
+  date:
+    description: 'Release date of the log entry found (e.g., 2020-08-22)'
+  status:
+    description: 'Status of the log entry found (prereleased, released, unreleased, or yanked)'
+  changes:
+    description: 'Description text of the log entry found'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+branding:
+  icon: 'file-text'
+  color: 'blue'
+

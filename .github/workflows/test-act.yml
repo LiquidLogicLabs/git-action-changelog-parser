@@ -1,0 +1,27 @@
+name: Test with Act
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test with GitHub blob URL
+        id: changelog
+        uses: ./
+        with:
+          path: 'https://github.com/traefik/traefik/blob/v3.6/CHANGELOG.md'
+          version: 'v3.6.5'
+
+      - name: Display outputs
+        run: |
+          echo "Version: ${{ steps.changelog.outputs.version }}"
+          echo "Date: ${{ steps.changelog.outputs.date }}"
+          echo "Status: ${{ steps.changelog.outputs.status }}"
+          echo "Changes:"
+          echo "${{ steps.changelog.outputs.changes }}"
+

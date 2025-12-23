@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Build and package action
+        run: npm run package
+
+      - name: Get changelog entry
+        id: changelog
+        run: |
+          node scripts/get-changelog-entry.js ./CHANGELOG.md ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+      - name: Generate release notes
+        id: release_notes
+        uses: mikepenz/release-changelog-builder-action@v6
+        with:
+          configurationJson: |
+            {
+              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Pull Requests</summary>\n\n#{{PR_LIST}}\n</details>"
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Combine changelog and release notes
+        id: combined
+        run: |
+          CHANGELOG_ENTRY="${{ steps.changelog.outputs.changes }}"
+          RELEASE_NOTES="${{ steps.release_notes.outputs.changelog }}"
+          
+          # Combine changelog entry with release notes
+          COMBINED=$(cat <<EOF
+          $CHANGELOG_ENTRY
+          
+          ---
+          
+          $RELEASE_NOTES
+          EOF
+          )
+          
+          # Escape for GitHub Actions
+          COMBINED="${COMBINED//$'\n'/'%0A'}"
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_ENTRY" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "---" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ${{ steps.changelog.outputs.changes }}
+            
+            ---
+            
+            ${{ steps.release_notes.outputs.changelog }}
+          draft: false
+          prerelease: ${{ steps.changelog.outputs.status == 'prereleased' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
