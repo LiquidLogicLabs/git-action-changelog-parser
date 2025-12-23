@@ -46,13 +46,7 @@ async function run(): Promise<void> {
       path = config.path;
     }
 
-    // Override validation settings from config
-    if (config.validation_level) {
-      config.validation_level = config.validation_level;
-    }
-    if (config.validation_depth) {
-      config.validation_depth = config.validation_depth;
-    }
+    // Validation settings are already set from config above
 
     core.info(`Reading changelog from: ${path}`);
 

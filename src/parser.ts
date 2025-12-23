@@ -208,8 +208,8 @@ export function findVersionEntry(
  * Loads configuration from a file
  */
 export async function loadConfig(configPath: string): Promise<ActionConfig> {
-  const fs = require('fs');
-  const path = require('path');
+  const fs = await import('fs');
+  const path = await import('path');
 
   const resolvedPath = path.isAbsolute(configPath)
     ? configPath
@@ -237,8 +237,8 @@ export async function loadConfig(configPath: string): Promise<ActionConfig> {
  * Finds configuration file in repository root
  */
 export async function findConfigFile(): Promise<string | null> {
-  const fs = require('fs');
-  const path = require('path');
+  const fs = await import('fs');
+  const path = await import('path');
 
   const configFiles = [
     '.changelog-reader.json',
