@@ -87,20 +87,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Combine changelog and release notes
-        id: combined
-        run: |
-          # Use heredoc to safely handle multiline content with special characters
-          {
-            echo 'body<<EOF'
-            echo '${{ steps.changelog.outputs.changes }}'
-            echo ''
-            echo '---'
-            echo ''
-            echo '${{ steps.release_notes.outputs.changelog }}'
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
