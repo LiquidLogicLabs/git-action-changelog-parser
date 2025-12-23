@@ -27,7 +27,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog
-  uses: your-org/changelog-parser-action@v1
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
   id: changelog
   with:
     path: ./CHANGELOG.md
@@ -38,7 +38,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Remote URL
-  uses: your-org/changelog-parser-action@v1
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
   id: changelog
   with:
     path: 'https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md'
@@ -50,7 +50,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitHub Blob URL
-  uses: your-org/changelog-parser-action@v1
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
   id: changelog
   with:
     path: 'https://github.com/owner/repo/blob/main/CHANGELOG.md'
@@ -61,7 +61,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitLab
-  uses: your-org/changelog-parser-action@v1
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
   id: changelog
   with:
     path: 'https://gitlab.com/owner/repo/-/raw/main/CHANGELOG.md'
@@ -72,7 +72,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Gitea
-  uses: your-org/changelog-parser-action@v1
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
   id: changelog
   with:
     path: 'https://your-gitea.com/owner/repo/src/branch/main/CHANGELOG.md'
@@ -183,7 +183,7 @@ jobs:
 
       - name: Get Changelog Entry
         id: changelog_reader
-        uses: your-org/changelog-parser-action@v1
+        uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
         with:
           validation_level: warn
           version: ${{ steps.tag_name.outputs.current_version }}
