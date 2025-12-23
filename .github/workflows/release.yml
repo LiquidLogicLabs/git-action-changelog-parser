@@ -38,14 +38,32 @@ jobs:
           echo "Extracted version: $VERSION"
 
       - name: Update CHANGELOG.md
-        uses: thomaseizinger/changelog-updater-action@v1
-        with:
-          version: ${{ steps.version.outputs.version }}
-          changelog-file: CHANGELOG.md
-          commit-changes: true
-          commit-message: "chore: update CHANGELOG.md for version ${{ steps.version.outputs.version }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DATE=$(date +%Y-%m-%d)
+          
+          # Check if version already exists in CHANGELOG
+          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            echo "Version $VERSION already exists in CHANGELOG.md"
+          else
+            # Check if there's an [Unreleased] section with content
+            if grep -A 100 "## \[Unreleased\]" CHANGELOG.md | grep -q "^-"; then
+              # Move Unreleased content to new version
+              sed -i "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[$VERSION\] - $DATE/" CHANGELOG.md
+              echo "Updated CHANGELOG.md: moved Unreleased content to version $VERSION"
+            else
+              # No Unreleased content, just add the version header
+              sed -i "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[$VERSION\] - $DATE/" CHANGELOG.md
+              echo "Updated CHANGELOG.md: added version $VERSION header"
+            fi
+            
+            # Commit the updated CHANGELOG
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add CHANGELOG.md
+            git commit -m "chore: update CHANGELOG.md for version $VERSION" || echo "No changes to commit"
+            git push origin main || echo "Nothing to push"
+          fi
 
       - name: Build and package action
         run: npm run package
