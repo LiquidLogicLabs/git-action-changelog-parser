@@ -15,7 +15,8 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 - ✅ Read changelogs from local file paths
 - ✅ Read changelogs from remote URLs (GitHub, GitLab, Bitbucket, Gitea, and any HTTP server)
 - ✅ Automatic blob-to-raw URL conversion for GitHub, GitLab, Bitbucket, and Gitea (both cloud and self-hosted)
-- ✅ Automatic CHANGELOG.md detection from repository root URLs
+- ✅ Automatic CHANGELOG.md detection from repository root URLs (via `repo_url` input or detecting repo root in `path`)
+- ✅ Graceful handling of missing CHANGELOG.md files (returns `nofound` status instead of failing)
 - ✅ Optional authentication token support for remote URLs
 - ✅ Keep a Changelog format parsing
 - ✅ Version extraction and validation
@@ -28,7 +29,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog
-  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
   id: changelog
   with:
     path: ./CHANGELOG.md
@@ -39,7 +40,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Remote URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
   id: changelog
   with:
     path: 'https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md'
@@ -51,7 +52,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitHub Blob URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
   id: changelog
   with:
     path: 'https://github.com/owner/repo/blob/main/CHANGELOG.md'
@@ -62,7 +63,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitLab
-  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
   id: changelog
   with:
     path: 'https://gitlab.com/owner/repo/-/raw/main/CHANGELOG.md'
@@ -73,7 +74,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Gitea
-  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
   id: changelog
   with:
     path: 'https://your-gitea.com/owner/repo/src/branch/main/CHANGELOG.md'
@@ -87,7 +88,7 @@ You can provide a repository URL and the action will automatically fetch `CHANGE
 
 ```yaml
 - name: Read Changelog from Repository URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
   id: changelog
   with:
     repo_url: 'https://github.com/owner/repo'
@@ -101,7 +102,7 @@ Alternatively, you can pass the repository root URL directly as the `path` input
 
 ```yaml
 - name: Read Changelog from Repo Root URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
   id: changelog
   with:
     path: 'https://github.com/owner/repo'
@@ -218,7 +219,7 @@ jobs:
 
       - name: Get Changelog Entry
         id: changelog_reader
-        uses: LiquidLogicLabs/changelog-parser-action@v1.0.0
+        uses: LiquidLogicLabs/changelog-parser-action@v1.0.1
         with:
           validation_level: warn
           version: ${{ steps.tag_name.outputs.current_version }}
