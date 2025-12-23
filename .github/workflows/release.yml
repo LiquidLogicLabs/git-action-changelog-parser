@@ -64,13 +64,30 @@ jobs:
       - name: Build and package action
         run: npm run package
 
+      - name: Get commits since last tag
+        id: commits
+        run: |
+          CURRENT_TAG="${{ github.ref_name }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^ 2>/dev/null || git tag --sort=-v:refname | sed -n '2p' || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git log --format="- %s (%h)" --reverse)
+          else
+            COMMITS=$(git log ${PREV_TAG}..${CURRENT_TAG} --format="- %s (%h)" --reverse)
+          fi
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- No commits found"
+          fi
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Generate release notes
         id: release_notes
         uses: mikepenz/release-changelog-builder-action@v6
         with:
           configurationJson: |
             {
-              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Pull Requests</summary>\n\n#{{PR_LIST}}\n</details>\n\n---\n\n### Usage\n\n\\`\\`\\`yaml\n- uses: LiquidLogicLabs/changelog-parser-action@${{ github.ref_name }}\n  with:\n    path: './CHANGELOG.md'\n    version: 'Unreleased'\n\\`\\`\\`\n\nFor more examples, see the [README](https://github.com/${{ github.repository }}#usage)."
+              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Pull Requests</summary>\n\n#{{PR_LIST}}\n</details>\n\n<details>\n<summary>Commits</summary>\n\n${{ steps.commits.outputs.commits }}\n</details>\n\n---\n\n### Usage\n\n\\`\\`\\`yaml\n- uses: LiquidLogicLabs/changelog-parser-action@${{ github.ref_name }}\n  with:\n    path: './CHANGELOG.md'\n    version: 'Unreleased'\n\\`\\`\\`\n\nFor more examples, see the [README](https://github.com/${{ github.repository }}#usage)."
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
