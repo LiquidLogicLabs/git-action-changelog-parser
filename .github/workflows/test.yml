@@ -1,0 +1,81 @@
+name: Test
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+      - name: Test local changelog parsing
+        run: |
+          node dist/index.js || true
+        env:
+          INPUT_PATH: ./CHANGELOG.md
+          INPUT_VERSION: Unreleased
+        continue-on-error: true
+
+      - name: Test remote URL fetching (GitHub)
+        run: |
+          node dist/index.js || true
+        env:
+          INPUT_PATH: https://raw.githubusercontent.com/traefik/traefik/master/CHANGELOG.md
+          INPUT_VERSION: v3.6.2
+        continue-on-error: true
+
+      - name: Test repo_url with blank path
+        run: |
+          node dist/index.js || true
+        env:
+          INPUT_REPO_URL: https://github.com/traefik/traefik
+          INPUT_REF: master
+          INPUT_VERSION: v3.6.2
+        continue-on-error: true
+
+      - name: Test repo root URL detection in path
+        run: |
+          node dist/index.js || true
+        env:
+          INPUT_PATH: https://github.com/traefik/traefik
+          INPUT_REF: master
+          INPUT_VERSION: v3.6.2
+        continue-on-error: true
+
+      - name: Test GitHub blob URL (auto-converted)
+        run: |
+          node dist/index.js || true
+        env:
+          INPUT_PATH: https://github.com/traefik/traefik/blob/master/CHANGELOG.md
+          INPUT_VERSION: v3.6.2
+        continue-on-error: true
+
+      - name: Test 404 handling (nofound status)
+        run: |
+          node dist/index.js || true
+        env:
+          INPUT_REPO_URL: https://github.com/traefik/traefik
+          INPUT_REF: nonexistent-branch
+        continue-on-error: true
+

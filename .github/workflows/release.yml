@@ -10,7 +10,32 @@ permissions:
   pull-requests: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  test:
+    uses: ./.github/workflows/test.yml
+
   release:
+    needs: [lint, test]
     runs-on: ubuntu-latest
 
     steps:
@@ -30,51 +55,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Extract version from tag
+      - name: Check version format in tag
         id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
-
-      - name: Update CHANGELOG.md
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          DATE=$(date +%Y-%m-%d)
-          
-          # Check if version already exists in CHANGELOG
-          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
-            echo "Version $VERSION already exists in CHANGELOG.md"
-          else
-            # Check if there's an [Unreleased] section with content
-            if grep -A 100 "## \[Unreleased\]" CHANGELOG.md | grep -q "^-"; then
-              # Move Unreleased content to new version
-              sed -i "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[$VERSION\] - $DATE/" CHANGELOG.md
-              echo "Updated CHANGELOG.md: moved Unreleased content to version $VERSION"
-            else
-              # No Unreleased content, just add the version header
-              sed -i "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[$VERSION\] - $DATE/" CHANGELOG.md
-              echo "Updated CHANGELOG.md: added version $VERSION header"
-            fi
-            
-            # Commit the updated CHANGELOG
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add CHANGELOG.md
-            git commit -m "chore: update CHANGELOG.md for version $VERSION" || echo "No changes to commit"
-            git push origin main || echo "Nothing to push"
-          fi
+        uses: nowsprinting/check-version-format-action@v4
+        with:
+          prefix: 'v'
 
       - name: Build and package action
         run: npm run package
-
-      - name: Get changelog entry
-        id: changelog
-        run: |
-          node scripts/get-changelog-entry.js ./CHANGELOG.md ${{ steps.version.outputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: false
 
       - name: Generate release notes
         id: release_notes
@@ -82,7 +70,7 @@ jobs:
         with:
           configurationJson: |
             {
-              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Pull Requests</summary>\n\n#{{PR_LIST}}\n</details>"
+              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Pull Requests</summary>\n\n#{{PR_LIST}}\n</details>\n\n---\n\n### Usage\n\n\\`\\`\\`yaml\n- uses: LiquidLogicLabs/changelog-parser-action@${{ github.ref_name }}\n  with:\n    path: './CHANGELOG.md'\n    version: 'Unreleased'\n\\`\\`\\`\n\nFor more examples, see the [README](https://github.com/${{ github.repository }}#usage)."
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -91,14 +79,21 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref_name }}
-          name: Release ${{ steps.version.outputs.version }}
-          body: |
-            ${{ steps.changelog.outputs.changes }}
-            
-            ---
-            
-            ${{ steps.release_notes.outputs.changelog }}
+          name: Release ${{ steps.version.outputs.full_without_prefix }}
+          body: ${{ steps.release_notes.outputs.changelog }}
           draft: false
-          prerelease: ${{ steps.changelog.outputs.status == 'prereleased' }}
+          prerelease: ${{ steps.version.outputs.is_stable != 'true' }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release Summary
+        run: |
+          echo "## 🎉 Release Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version.outputs.full_without_prefix }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Release**: [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.version.outputs.is_stable }}" != "true" ]; then
+            echo "- **Status**: ⚠️ Pre-release (for testing)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: ✅ Stable release" >> $GITHUB_STEP_SUMMARY
+          fi
 
