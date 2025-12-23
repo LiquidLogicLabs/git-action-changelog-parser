@@ -25688,7 +25688,9 @@ const parser_1 = __nccwpck_require__(7196);
 async function run() {
     try {
         // Get inputs
-        let path = core.getInput('path') || './CHANGELOG.md';
+        let path = core.getInput('path');
+        let repoUrl = core.getInput('repo_url');
+        let ref = core.getInput('ref') || 'main';
         const token = core.getInput('token') || process.env.GITHUB_TOKEN;
         const version = core.getInput('version');
         const validationLevel = (core.getInput('validation_level') ||
@@ -25712,14 +25714,52 @@ async function run() {
                 config = { ...config, ...fileConfig };
             }
         }
-        // Override path from config if not explicitly provided
+        // Override inputs from config if not explicitly provided
         if (config.path && !core.getInput('path')) {
             path = config.path;
         }
+        if (config.repo_url && !core.getInput('repo_url')) {
+            repoUrl = config.repo_url;
+        }
+        if (config.ref && !core.getInput('ref')) {
+            ref = config.ref;
+        }
+        // Determine the final path/URL to use
+        let finalPath;
+        // Check if path is blank/empty and repo_url is provided
+        if ((!path || path.trim() === '') && repoUrl) {
+            finalPath = (0, path_handler_1.constructChangelogUrl)(repoUrl, ref);
+            core.info(`Constructed CHANGELOG.md URL from repo_url: ${finalPath}`);
+        }
+        // Check if path is a repository root URL
+        else if (path && (0, path_handler_1.isRepoRootUrl)(path)) {
+            finalPath = (0, path_handler_1.constructChangelogUrl)(path, ref);
+            core.info(`Detected repo root URL, constructed CHANGELOG.md URL: ${finalPath}`);
+        }
+        // Use path as-is (default behavior)
+        else {
+            finalPath = path || './CHANGELOG.md';
+        }
         // Validation settings are already set from config above
-        core.info(`Reading changelog from: ${path}`);
+        core.info(`Reading changelog from: ${finalPath}`);
         // Read changelog content
-        const content = await (0, path_handler_1.readContent)(path, token);
+        let content;
+        try {
+            content = await (0, path_handler_1.readContent)(finalPath, token);
+        }
+        catch (error) {
+            // Check if it's a 404 error (file not found)
+            if (error instanceof Error && (error.message.includes('404') || error.message.includes('not found'))) {
+                core.info('CHANGELOG.md not found at the specified location');
+                core.setOutput('version', '');
+                core.setOutput('date', '');
+                core.setOutput('status', 'nofound');
+                core.setOutput('changes', '');
+                return;
+            }
+            // Re-throw other errors
+            throw error;
+        }
         if (!content || content.trim() === '') {
             throw new Error('Changelog file is empty');
         }
@@ -26089,6 +26129,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.convertBlobToRaw = convertBlobToRaw;
 exports.isUrl = isUrl;
+exports.isRepoRootUrl = isRepoRootUrl;
+exports.constructChangelogUrl = constructChangelogUrl;
 exports.readContent = readContent;
 const fs = __importStar(__nccwpck_require__(9896));
 const path = __importStar(__nccwpck_require__(6928));
@@ -26130,6 +26172,67 @@ function convertBlobToRaw(url) {
  */
 function isUrl(pathOrUrl) {
     return pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://');
+}
+/**
+ * Detects if a URL is a repository root (not a file path)
+ */
+function isRepoRootUrl(url) {
+    if (!isUrl(url)) {
+        return false;
+    }
+    // Remove trailing slash
+    const normalizedUrl = url.replace(/\/$/, '');
+    // Check if URL contains paths that indicate it's NOT a repo root
+    if (normalizedUrl.includes('/blob/') ||
+        normalizedUrl.includes('/-/blob/') ||
+        normalizedUrl.includes('/raw/') ||
+        normalizedUrl.includes('/-/raw/') ||
+        normalizedUrl.includes('/src/') ||
+        normalizedUrl.match(/\.(md|txt|json|yml|yaml|js|ts|py|java|cpp|h|hpp)$/i)) {
+        return false;
+    }
+    // Pattern: https?://[domain]/[owner]/[repo] or https?://[domain]/[owner]/[repo]/
+    // Should match exactly 3 path segments after domain
+    const repoRootMatch = normalizedUrl.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);
+    return repoRootMatch !== null;
+}
+/**
+ * Constructs CHANGELOG.md URL from repository URL and ref
+ */
+function constructChangelogUrl(repoUrl, ref) {
+    // Remove trailing slash
+    const normalizedUrl = repoUrl.replace(/\/$/, '');
+    // Parse the repository URL
+    const urlMatch = normalizedUrl.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);
+    if (!urlMatch) {
+        throw new Error(`Invalid repository URL format: ${repoUrl}`);
+    }
+    const [, domain, owner, repo] = urlMatch;
+    // Determine platform and construct appropriate raw URL
+    if (domain === 'github.com') {
+        // GitHub cloud: use raw.githubusercontent.com
+        return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('github')) {
+        // GitHub Enterprise: same domain, use /raw/ path
+        return `https://${domain}/${owner}/${repo}/raw/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('gitlab')) {
+        // GitLab: cloud or enterprise
+        return `https://${domain}/${owner}/${repo}/-/raw/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('bitbucket')) {
+        // Bitbucket: cloud or server
+        return `https://${domain}/${owner}/${repo}/raw/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('gitea')) {
+        // Gitea: cloud or self-hosted
+        return `https://${domain}/${owner}/${repo}/raw/branch/${ref}/CHANGELOG.md`;
+    }
+    else {
+        // Unknown platform - try GitHub-style format as fallback
+        return `https://${domain}/${owner}/${repo}/raw/${ref}/CHANGELOG.md`;
+    }
 }
 /**
  * Reads content from a local file or remote URL

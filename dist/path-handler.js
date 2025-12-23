@@ -35,6 +35,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertBlobToRaw = convertBlobToRaw;
 exports.isUrl = isUrl;
+exports.isRepoRootUrl = isRepoRootUrl;
+exports.constructChangelogUrl = constructChangelogUrl;
 exports.readContent = readContent;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
@@ -76,6 +78,67 @@ function convertBlobToRaw(url) {
  */
 function isUrl(pathOrUrl) {
     return pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://');
+}
+/**
+ * Detects if a URL is a repository root (not a file path)
+ */
+function isRepoRootUrl(url) {
+    if (!isUrl(url)) {
+        return false;
+    }
+    // Remove trailing slash
+    const normalizedUrl = url.replace(/\/$/, '');
+    // Check if URL contains paths that indicate it's NOT a repo root
+    if (normalizedUrl.includes('/blob/') ||
+        normalizedUrl.includes('/-/blob/') ||
+        normalizedUrl.includes('/raw/') ||
+        normalizedUrl.includes('/-/raw/') ||
+        normalizedUrl.includes('/src/') ||
+        normalizedUrl.match(/\.(md|txt|json|yml|yaml|js|ts|py|java|cpp|h|hpp)$/i)) {
+        return false;
+    }
+    // Pattern: https?://[domain]/[owner]/[repo] or https?://[domain]/[owner]/[repo]/
+    // Should match exactly 3 path segments after domain
+    const repoRootMatch = normalizedUrl.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);
+    return repoRootMatch !== null;
+}
+/**
+ * Constructs CHANGELOG.md URL from repository URL and ref
+ */
+function constructChangelogUrl(repoUrl, ref) {
+    // Remove trailing slash
+    const normalizedUrl = repoUrl.replace(/\/$/, '');
+    // Parse the repository URL
+    const urlMatch = normalizedUrl.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);
+    if (!urlMatch) {
+        throw new Error(`Invalid repository URL format: ${repoUrl}`);
+    }
+    const [, domain, owner, repo] = urlMatch;
+    // Determine platform and construct appropriate raw URL
+    if (domain === 'github.com') {
+        // GitHub cloud: use raw.githubusercontent.com
+        return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('github')) {
+        // GitHub Enterprise: same domain, use /raw/ path
+        return `https://${domain}/${owner}/${repo}/raw/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('gitlab')) {
+        // GitLab: cloud or enterprise
+        return `https://${domain}/${owner}/${repo}/-/raw/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('bitbucket')) {
+        // Bitbucket: cloud or server
+        return `https://${domain}/${owner}/${repo}/raw/${ref}/CHANGELOG.md`;
+    }
+    else if (domain.includes('gitea')) {
+        // Gitea: cloud or self-hosted
+        return `https://${domain}/${owner}/${repo}/raw/branch/${ref}/CHANGELOG.md`;
+    }
+    else {
+        // Unknown platform - try GitHub-style format as fallback
+        return `https://${domain}/${owner}/${repo}/raw/${ref}/CHANGELOG.md`;
+    }
 }
 /**
  * Reads content from a local file or remote URL

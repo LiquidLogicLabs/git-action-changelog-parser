@@ -37,33 +37,21 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
-      - name: Update CHANGELOG.md
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          DATE=$(date +%Y-%m-%d)
-          
-          # Check if version already exists in CHANGELOG
-          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
-            echo "Version $VERSION already exists in CHANGELOG.md"
-          else
-            # Check if there's an [Unreleased] section with content
-            if grep -A 100 "## \[Unreleased\]" CHANGELOG.md | grep -q "^-"; then
-              # Move Unreleased content to new version
-              sed -i "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[$VERSION\] - $DATE/" CHANGELOG.md
-              echo "Updated CHANGELOG.md: moved Unreleased content to version $VERSION"
-            else
-              # No Unreleased content, just add the version header
-              sed -i "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[$VERSION\] - $DATE/" CHANGELOG.md
-              echo "Updated CHANGELOG.md: added version $VERSION header"
-            fi
-            
-            # Commit the updated CHANGELOG
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add CHANGELOG.md
-            git commit -m "chore: update CHANGELOG.md for version $VERSION" || echo "No changes to commit"
-            git push origin main || echo "Nothing to push"
-          fi
+      - name: Update CHANGELOG.md with Conventional Changelog
+        id: changelog_gen
+        uses: TriPSs/conventional-changelog-action@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          skip-tag: 'true'
+          skip-version-file: 'true'
+          skip-commit: 'false'
+          input-file: 'CHANGELOG.md'
+          output-file: 'CHANGELOG.md'
+          tag-prefix: 'v'
+          git-message: 'chore: update CHANGELOG.md for version {version}'
+          git-branch: 'main'
+          skip-on-empty: 'true'
+          skip-git-pull: 'true'
 
       - name: Build and package action
         run: npm run package
