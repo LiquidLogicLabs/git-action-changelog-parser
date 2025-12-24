@@ -128,7 +128,7 @@ describe('Changelog Parser Action', () => {
             });
             // Call run() directly
             await (0, index_1.run)();
-            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'main');
+            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'main', 'auto');
             expect(mockReadContent).toHaveBeenCalledWith('https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md', undefined);
         });
         it('should use provided ref when constructing URL from repo_url', async () => {
@@ -154,7 +154,7 @@ describe('Changelog Parser Action', () => {
                 ],
             });
             await (0, index_1.run)();
-            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'develop');
+            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'develop', 'auto');
         });
         it('should default to main when ref is not provided', async () => {
             mockCore.getInput.mockImplementation((name) => {
@@ -179,7 +179,7 @@ describe('Changelog Parser Action', () => {
                 ],
             });
             await (0, index_1.run)();
-            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'main');
+            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'main', 'auto');
         });
     });
     describe('repo root URL detection in path', () => {
@@ -208,7 +208,7 @@ describe('Changelog Parser Action', () => {
             });
             await (0, index_1.run)();
             expect(mockIsRepoRootUrl).toHaveBeenCalledWith('https://github.com/owner/repo');
-            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'main');
+            expect(mockConstructChangelogUrl).toHaveBeenCalledWith('https://github.com/owner/repo', 'main', 'auto');
         });
         it('should not detect repo root if path is a file URL', async () => {
             mockCore.getInput.mockImplementation((name) => {

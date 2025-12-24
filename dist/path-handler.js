@@ -146,8 +146,9 @@ function detectRepoType(repoUrl, repoType = 'auto') {
  * Constructs CHANGELOG.md URL from repository URL and ref
  */
 function constructChangelogUrl(repoUrl, ref, repoType = 'auto') {
-    // Remove trailing slash
-    const normalizedUrl = repoUrl.replace(/\/$/, '');
+    // Remove trailing slash and .git suffix if present
+    let normalizedUrl = repoUrl.replace(/\/$/, '');
+    normalizedUrl = normalizedUrl.replace(/\.git$/, '');
     // Parse the repository URL
     const urlMatch = normalizedUrl.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);
     if (!urlMatch) {

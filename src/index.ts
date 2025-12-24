@@ -62,8 +62,8 @@ export async function run(): Promise<void> {
     // Determine the final path/URL to use
     let finalPath: string;
     
-    // Check if path is blank/empty and repo_url is provided
-    if ((!path || path.trim() === '') && repoUrl) {
+    // If repo_url is provided, it takes precedence (even if path has a default value)
+    if (repoUrl) {
       finalPath = constructChangelogUrl(repoUrl, ref, repoType);
       core.info(`Constructed CHANGELOG.md URL from repo_url: ${finalPath}`);
     }

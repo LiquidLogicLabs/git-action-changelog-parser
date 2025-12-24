@@ -123,8 +123,9 @@ export function constructChangelogUrl(
   ref: string,
   repoType: 'auto' | 'github' | 'gitea' | 'gitlab' | 'bitbucket' = 'auto'
 ): string {
-  // Remove trailing slash
-  const normalizedUrl = repoUrl.replace(/\/$/, '');
+  // Remove trailing slash and .git suffix if present
+  let normalizedUrl = repoUrl.replace(/\/$/, '');
+  normalizedUrl = normalizedUrl.replace(/\.git$/, '');
   
   // Parse the repository URL
   const urlMatch = normalizedUrl.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);

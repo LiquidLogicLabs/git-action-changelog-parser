@@ -25732,8 +25732,8 @@ async function run() {
         }
         // Determine the final path/URL to use
         let finalPath;
-        // Check if path is blank/empty and repo_url is provided
-        if ((!path || path.trim() === '') && repoUrl) {
+        // If repo_url is provided, it takes precedence (even if path has a default value)
+        if (repoUrl) {
             finalPath = (0, path_handler_1.constructChangelogUrl)(repoUrl, ref, repoType);
             core.info(`Constructed CHANGELOG.md URL from repo_url: ${finalPath}`);
         }
@@ -26246,8 +26246,9 @@ function detectRepoType(repoUrl, repoType = 'auto') {
  * Constructs CHANGELOG.md URL from repository URL and ref
  */
 function constructChangelogUrl(repoUrl, ref, repoType = 'auto') {
-    // Remove trailing slash
-    const normalizedUrl = repoUrl.replace(/\/$/, '');
+    // Remove trailing slash and .git suffix if present
+    let normalizedUrl = repoUrl.replace(/\/$/, '');
+    normalizedUrl = normalizedUrl.replace(/\.git$/, '');
     // Parse the repository URL
     const urlMatch = normalizedUrl.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);
     if (!urlMatch) {

@@ -157,6 +157,23 @@ describe('detectRepoType', () => {
       expect(detectRepoType('not-a-url', 'auto')).toBe('gitea');
     });
   });
+
+  describe('constructChangelogUrl with .git suffix', () => {
+    it('should strip .git suffix from GitHub URL', () => {
+      const result = constructChangelogUrl('https://github.com/owner/repo.git', 'main', 'github');
+      expect(result).toBe('https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md');
+    });
+
+    it('should strip .git suffix from Gitea URL', () => {
+      const result = constructChangelogUrl('https://git.ravenwolf.org/github/traefik.git', 'v3.6.5', 'gitea');
+      expect(result).toBe('https://git.ravenwolf.org/github/traefik/raw/branch/v3.6.5/CHANGELOG.md');
+    });
+
+    it('should strip .git suffix from custom Gitea domain', () => {
+      const result = constructChangelogUrl('https://git.example.com/owner/repo.git', 'main', 'gitea');
+      expect(result).toBe('https://git.example.com/owner/repo/raw/branch/main/CHANGELOG.md');
+    });
+  });
 });
 
 describe('constructChangelogUrl', () => {

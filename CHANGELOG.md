@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2025-12-24
+
+### Fixed
+- Fixed `repo_url` to take precedence over default `path` value - now works correctly when `repo_url` is provided even if `path` has default value
+- Added automatic `.git` suffix stripping from repository URLs (e.g., `https://git.ravenwolf.org/owner/repo.git` now works correctly)
+
 ## [1.0.4] - 2025-12-24
 
 ### Added
