@@ -82,6 +82,22 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
     token: ${{ secrets.GITEA_TOKEN }}
 ```
 
+### Gitea Example with Custom Domain
+
+For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), you can explicitly specify the repository type:
+
+```yaml
+- name: Read Changelog from Custom Gitea Domain
+  uses: LiquidLogicLabs/changelog-parser-action@v1.0.4
+  id: changelog
+  with:
+    repo_url: 'https://git.ravenwolf.org/owner/repo'
+    repo_type: 'gitea'  # Explicitly specify Gitea for custom domains
+    ref: 'main'
+    version: '1.2.3'
+    token: ${{ secrets.GITEA_TOKEN }}
+```
+
 ### Repository URL Example (Auto-detect CHANGELOG.md)
 
 You can provide a repository URL and the action will automatically fetch `CHANGELOG.md` from the repository root:
@@ -119,6 +135,7 @@ Both approaches work the same way - the action will automatically detect that it
 | `path` | Path to changelog file or URL. Can also be a repository root URL (e.g., `https://github.com/owner/repo`) | No | `./CHANGELOG.md` |
 | `repo_url` | Repository URL (e.g., `https://github.com/owner/repo`). When `path` is blank, CHANGELOG.md will be fetched from the root of this repository | No | - |
 | `ref` | Branch or ref to use when constructing CHANGELOG.md URL from `repo_url` or repository root URL in `path` | No | `main` |
+| `repo_type` | Repository platform type: `auto`, `github`, `gitea`, `gitlab`, or `bitbucket`. Use explicit type for custom domains (e.g., `git.ravenwolf.org`). Defaults to `auto` which attempts to detect from domain | No | `auto` |
 | `token` | Authentication token for remote URLs | No | `${{ github.token }}` |
 | `version` | Version to retrieve (or "Unreleased") | No | Latest version |
 | `validation_level` | Validation level: `none`, `warn`, or `error` | No | `none` |
@@ -155,6 +172,7 @@ Both approaches work the same way - the action will automatically detect that it
 - **Raw**: `https://gitea.com/owner/repo/raw/branch/CHANGELOG.md`
 - **Blob (auto-converted)**: `https://gitea.com/owner/repo/src/branch/CHANGELOG.md`
 - **Self-hosted**: `https://your-gitea.com/owner/repo/src/branch/CHANGELOG.md`
+- **Custom domain**: For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), use `repo_type: 'gitea'` to ensure correct URL format
 
 ### Any HTTP Server
 - `https://example.com/path/to/CHANGELOG.md`
@@ -176,6 +194,7 @@ You can use a configuration file instead of specifying options in your workflow.
   "path": "./CHANGELOG.md",
   "repo_url": "https://github.com/owner/repo",
   "ref": "main",
+  "repo_type": "auto",
   "validation_level": "warn",
   "validation_depth": 10
 }
