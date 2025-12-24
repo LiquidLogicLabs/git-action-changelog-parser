@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.4] - 2025-01-XX
+## [1.0.4] - 2025-12-24
 
 ### Added
 - `repo_type` input parameter to explicitly specify repository platform type (auto, github, gitea, gitlab, bitbucket)
