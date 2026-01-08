@@ -265,6 +265,13 @@ jobs:
 - No GitHub API dependencies - uses standard HTTP only
 - Works with any HTTP server, not just GitHub
 
+## Documentation
+
+For developers and contributors:
+
+- **[Development Guide](docs/DEVELOPMENT.md)** - Setup, development workflow, and contributing guidelines
+- **[Testing Guide](docs/TESTING.md)** - Complete testing documentation
+
 ## License
 
 MIT
