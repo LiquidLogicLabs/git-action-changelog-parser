@@ -25978,12 +25978,20 @@ function parseChangelog(content) {
             let date = date1 || date2;
             if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
                 // If date1 doesn't look like a date, try date2, or look for date in the line
+                // First try parentheses format: (2024-01-01)
                 const dateMatch = line.match(/\((\d{4}-\d{2}-\d{2})\)/);
                 if (dateMatch) {
                     date = dateMatch[1];
                 }
-                else if (!date2 || !/^\d{4}-\d{2}-\d{2}$/.test(date2)) {
-                    date = undefined;
+                else {
+                    // Try to extract date after dash: ## [version] - 2024-01-01
+                    const dashDateMatch = line.match(/-\s*(\d{4}-\d{2}-\d{2})/);
+                    if (dashDateMatch) {
+                        date = dashDateMatch[1];
+                    }
+                    else if (!date2 || !/^\d{4}-\d{2}-\d{2}$/.test(date2)) {
+                        date = undefined;
+                    }
                 }
             }
             // Determine status based on version and date
@@ -25993,6 +26001,11 @@ function parseChangelog(content) {
             }
             else if (version.includes('-') && (version.includes('alpha') || version.includes('beta') || version.includes('rc'))) {
                 status = 'prereleased';
+            }
+            else if (date2 && date2.toUpperCase() === 'YANKED') {
+                // Check if the text after dash is YANKED
+                status = 'yanked';
+                date = undefined; // YANKED is not a date
             }
             currentEntry = {
                 version,

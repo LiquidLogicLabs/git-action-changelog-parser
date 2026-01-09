@@ -12,6 +12,7 @@
     "test:act": "act -W .github/workflows/test.yml --eventpath .github/workflows/.act/event-workflow_call.json",
     "test:act:verbose": "act -W .github/workflows/test.yml --eventpath .github/workflows/.act/event-workflow_call.json -v",
     "test:act:ci": "act -W .github/workflows/ci.yml",
+    "test:act:e2e": "act workflow_dispatch -W .github/workflows/e2e-tests.yml --eventpath .github/workflows/.act/event-workflow_dispatch.json",
     "test:act:release": "act push --eventpath .github/workflows/.act/event-release.json",
     "lint:act": "act -W .github/workflows/ci.yml -j lint",
     "lint": "eslint src/**/*.ts",

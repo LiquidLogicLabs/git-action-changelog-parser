@@ -3,39 +3,27 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'  # Semver tags only
 
 permissions:
   contents: write
   pull-requests: read
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  ci:
+    uses: ./.github/workflows/ci.yml
+    # CI runs: lint -> unit tests
+    # When manually triggered, checkout the specified tag
+    secrets: inherit
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Type check
-        run: npx tsc --noEmit
-
-  test:
-    uses: ./.github/workflows/test.yml
+  e2e-tests:
+    needs: ci  # E2E tests run after CI passes
+    uses: ./.github/workflows/e2e-tests.yml
+    secrets: inherit
+    # e2e-tests.yml runs E2E tests with GitHub scenarios
 
   release:
-    needs: [lint, test]
+    needs: [ci, e2e-tests]  # REQUIRED: CI and E2E tests must pass before release
     runs-on: ubuntu-latest
     permissions:
       contents: write

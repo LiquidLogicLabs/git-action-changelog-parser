@@ -2,9 +2,14 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: ['**']  # Only match branches (tags are handled by release workflow)
   pull_request:
     branches: ['**']
+  workflow_call:  # Allow CI to be called by release workflow
+  workflow_dispatch:  # Allow manual triggering
+
+# Note: When called by release workflow, CI will run on the tag ref
+# When triggered directly, CI should NOT run on tag pushes (release handles those)
 
 permissions:
   contents: read
@@ -12,7 +17,12 @@ permissions:
 
 jobs:
   lint:
+    # Runs for workflow_call/workflow_dispatch/push/PR; tag pushes are excluded by trigger
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,6 +42,14 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Build
+        run: npm run build
+
   test:
+    # test.yml has its own condition and only supports workflow_call and workflow_dispatch
+    # When ci.yml is triggered by push/PR/workflow_call, calling test.yml via workflow_call will work
+    # test.yml will handle the condition checking internally
+    needs: lint  # Tests run after lint
     uses: ./.github/workflows/test.yml
+    # test.yml runs: unit tests (npm test)
 

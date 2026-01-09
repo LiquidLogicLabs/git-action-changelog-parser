@@ -1,0 +1,102 @@
+name: E2E Tests
+
+on:
+  workflow_call:  # Called by release workflow
+  workflow_dispatch:  # Manual trigger only
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-github:
+    # Runs for workflow_call/workflow_dispatch; tag pushes are not used here
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test local changelog parsing
+        id: changelog-local
+        uses: ./
+        with:
+          path: ./CHANGELOG.md
+          version: Unreleased
+
+      - name: Display local outputs
+        run: |
+          echo "Version: ${{ steps.changelog-local.outputs.version }}"
+          echo "Date: ${{ steps.changelog-local.outputs.date }}"
+          echo "Status: ${{ steps.changelog-local.outputs.status }}"
+
+      - name: Test with GitHub blob URL (auto-converted)
+        id: changelog-blob
+        uses: ./
+        with:
+          path: 'https://github.com/traefik/traefik/blob/v3.6/CHANGELOG.md'
+          version: 'v3.6.5'
+
+      - name: Display blob URL outputs
+        run: |
+          echo "Version: ${{ steps.changelog-blob.outputs.version }}"
+          echo "Date: ${{ steps.changelog-blob.outputs.date }}"
+          echo "Status: ${{ steps.changelog-blob.outputs.status }}"
+
+      - name: Test with repo_url input
+        id: changelog-repo-url
+        uses: ./
+        with:
+          repo_url: 'https://github.com/traefik/traefik'
+          ref: 'v3.6'
+          version: 'v3.6.5'
+
+      - name: Display repo_url outputs
+        run: |
+          echo "Version: ${{ steps.changelog-repo-url.outputs.version }}"
+          echo "Date: ${{ steps.changelog-repo-url.outputs.date }}"
+          echo "Status: ${{ steps.changelog-repo-url.outputs.status }}"
+
+      - name: Test with repository root URL in path
+        id: changelog-repo-root
+        uses: ./
+        with:
+          path: 'https://github.com/traefik/traefik'
+          ref: 'v3.6'
+          version: 'v3.6.5'
+
+      - name: Display repo root outputs
+        run: |
+          echo "Version: ${{ steps.changelog-repo-root.outputs.version }}"
+          echo "Date: ${{ steps.changelog-repo-root.outputs.date }}"
+          echo "Status: ${{ steps.changelog-repo-root.outputs.status }}"
+
+      - name: Test 404 handling (nofound status)
+        id: changelog-404
+        uses: ./
+        with:
+          repo_url: 'https://github.com/traefik/traefik'
+          ref: 'nonexistent-branch'
+        continue-on-error: true
+
+      - name: Display 404 outputs
+        run: |
+          echo "Status: ${{ steps.changelog-404.outputs.status }}"
+          if [ "${{ steps.changelog-404.outputs.status }}" != "nofound" ]; then
+            echo "❌ Expected 'nofound' status for 404 case"
+            exit 1
+          else
+            echo "✅ Correctly returned 'nofound' status"
+          fi
+
+      - name: E2E Test Summary
+        run: |
+          echo "## ✅ E2E Tests Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All end-to-end tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Tested scenarios:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Local changelog parsing" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ GitHub blob URL (auto-converted)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ repo_url input" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Repository root URL in path" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 404 handling (nofound status)" >> $GITHUB_STEP_SUMMARY
+

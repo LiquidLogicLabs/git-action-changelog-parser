@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { readContent, isRepoRootUrl, constructChangelogUrl } from './path-handler';
-import { parseChangelog, findVersionEntry, findConfigFile, loadConfig } from './parser';
+import { parseChangelog, findVersionEntry, findConfigFile, loadConfig, validateChangelog } from './parser';
 import { run } from './index';
 
 // Mock dependencies
@@ -16,6 +16,7 @@ const mockParseChangelog = parseChangelog as jest.MockedFunction<typeof parseCha
 const mockFindVersionEntry = findVersionEntry as jest.MockedFunction<typeof findVersionEntry>;
 const mockFindConfigFile = findConfigFile as jest.MockedFunction<typeof findConfigFile>;
 const mockLoadConfig = loadConfig as jest.MockedFunction<typeof loadConfig>;
+const mockValidateChangelog = validateChangelog as jest.MockedFunction<typeof validateChangelog>;
 
 describe('Changelog Parser Action', () => {
   const originalEnv = process.env;
@@ -343,6 +344,196 @@ describe('Changelog Parser Action', () => {
       await run();
 
       expect(mockReadContent).toHaveBeenCalledWith('./CHANGELOG.md', undefined, false);
+    });
+  });
+
+  describe('validation', () => {
+    it('should call validateChangelog when validation_level is warn', async () => {
+      mockCore.getInput.mockImplementation((name: string) => {
+        if (name === 'path') return './CHANGELOG.md';
+        if (name === 'version') return '1.0.0';
+        if (name === 'validation_level') return 'warn';
+        return '';
+      });
+      
+      mockIsRepoRootUrl.mockReturnValue(false);
+      mockReadContent.mockResolvedValue('## [1.0.0] - 2024-01-01\n\n- Initial release');
+      mockParseChangelog.mockReturnValue({
+        entries: [
+          {
+            version: '1.0.0',
+            date: '2024-01-01',
+            status: 'released',
+            changes: '- Initial release',
+          },
+        ],
+      });
+      mockValidateChangelog.mockReturnValue({
+        valid: true,
+        errors: [],
+        warnings: [],
+      });
+
+      await run();
+
+      expect(mockValidateChangelog).toHaveBeenCalled();
+    });
+
+    it('should call validateChangelog when validation_level is error', async () => {
+      mockCore.getInput.mockImplementation((name: string) => {
+        if (name === 'path') return './CHANGELOG.md';
+        if (name === 'version') return '1.0.0';
+        if (name === 'validation_level') return 'error';
+        return '';
+      });
+      
+      mockIsRepoRootUrl.mockReturnValue(false);
+      mockReadContent.mockResolvedValue('## [1.0.0] - 2024-01-01\n\n- Initial release');
+      mockParseChangelog.mockReturnValue({
+        entries: [
+          {
+            version: '1.0.0',
+            date: '2024-01-01',
+            status: 'released',
+            changes: '- Initial release',
+          },
+        ],
+      });
+      mockValidateChangelog.mockReturnValue({
+        valid: true,
+        errors: [],
+        warnings: [],
+      });
+
+      await run();
+
+      expect(mockValidateChangelog).toHaveBeenCalled();
+    });
+  });
+
+  describe('config file handling', () => {
+    it('should load config file when config_file is provided', async () => {
+      mockCore.getInput.mockImplementation((name: string) => {
+        if (name === 'path') return './CHANGELOG.md';
+        if (name === 'version') return '1.0.0';
+        if (name === 'config_file') return '.changelog-reader.json';
+        return '';
+      });
+      
+      mockIsRepoRootUrl.mockReturnValue(false);
+      mockReadContent.mockResolvedValue('## [1.0.0] - 2024-01-01\n\n- Initial release');
+      mockParseChangelog.mockReturnValue({
+        entries: [
+          {
+            version: '1.0.0',
+            date: '2024-01-01',
+            status: 'released',
+            changes: '- Initial release',
+          },
+        ],
+      });
+      mockLoadConfig.mockResolvedValue({
+        path: './CHANGELOG.md',
+        validation_level: 'warn',
+      });
+
+      await run();
+
+      expect(mockLoadConfig).toHaveBeenCalledWith('.changelog-reader.json');
+    });
+
+    it('should auto-detect config file when config_file is not provided', async () => {
+      mockCore.getInput.mockImplementation((name: string) => {
+        if (name === 'path') return './CHANGELOG.md';
+        if (name === 'version') return '1.0.0';
+        return '';
+      });
+      
+      mockIsRepoRootUrl.mockReturnValue(false);
+      mockReadContent.mockResolvedValue('## [1.0.0] - 2024-01-01\n\n- Initial release');
+      mockParseChangelog.mockReturnValue({
+        entries: [
+          {
+            version: '1.0.0',
+            date: '2024-01-01',
+            status: 'released',
+            changes: '- Initial release',
+          },
+        ],
+      });
+      mockFindConfigFile.mockResolvedValue('.changelog-reader.json');
+      mockLoadConfig.mockResolvedValue({
+        validation_level: 'warn',
+      });
+
+      await run();
+
+      expect(mockFindConfigFile).toHaveBeenCalled();
+    });
+  });
+
+  describe('repo_type explicit specification', () => {
+    it('should use explicit repo_type when provided', async () => {
+      mockCore.getInput.mockImplementation((name: string) => {
+        if (name === 'repo_url') return 'https://git.ravenwolf.org/owner/repo';
+        if (name === 'ref') return 'main';
+        if (name === 'repo_type') return 'gitea';
+        if (name === 'version') return '1.0.0';
+        return '';
+      });
+      
+      mockConstructChangelogUrl.mockReturnValue('https://git.ravenwolf.org/owner/repo/raw/branch/main/CHANGELOG.md');
+      mockReadContent.mockResolvedValue('## [1.0.0] - 2024-01-01\n\n- Initial release');
+      mockParseChangelog.mockReturnValue({
+        entries: [
+          {
+            version: '1.0.0',
+            date: '2024-01-01',
+            status: 'released',
+            changes: '- Initial release',
+          },
+        ],
+      });
+
+      await run();
+
+      expect(mockConstructChangelogUrl).toHaveBeenCalledWith(
+        'https://git.ravenwolf.org/owner/repo',
+        'main',
+        'gitea'
+      );
+    });
+  });
+
+  describe('ignore_cert_errors', () => {
+    it('should pass ignore_cert_errors to readContent', async () => {
+      mockCore.getInput.mockImplementation((name: string) => {
+        if (name === 'path') return 'https://example.com/CHANGELOG.md';
+        if (name === 'version') return '1.0.0';
+        if (name === 'ignore_cert_errors') return 'true';
+        return '';
+      });
+      
+      mockIsRepoRootUrl.mockReturnValue(false);
+      mockReadContent.mockResolvedValue('## [1.0.0] - 2024-01-01\n\n- Initial release');
+      mockParseChangelog.mockReturnValue({
+        entries: [
+          {
+            version: '1.0.0',
+            date: '2024-01-01',
+            status: 'released',
+            changes: '- Initial release',
+          },
+        ],
+      });
+
+      await run();
+
+      expect(mockReadContent).toHaveBeenCalledWith(
+        'https://example.com/CHANGELOG.md',
+        undefined,
+        true
+      );
     });
   });
 });
