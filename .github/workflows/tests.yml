@@ -34,7 +34,3 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:unit
-
-      - name: Run integration tests
-        run: npm run test:integration || echo "No integration tests found - this is expected if tests aren't organized by type"
-        continue-on-error: true
