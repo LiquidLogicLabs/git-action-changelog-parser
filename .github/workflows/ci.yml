@@ -8,8 +8,9 @@ on:
   workflow_call:  # Allow CI to be called by release workflow
   workflow_dispatch:  # Allow manual triggering
 
-# Note: When called by release workflow, CI will run on the tag ref
-# When triggered directly, CI should NOT run on tag pushes (release handles those)
+# Note: When called by release workflow via workflow_call, CI will run on the tag ref
+# When triggered directly by push, tags are already excluded (only branches match)
+# So we don't need if conditions - workflow_call and workflow_dispatch always run
 
 permissions:
   contents: read
@@ -17,9 +18,7 @@ permissions:
 
 jobs:
   lint:
-    # Always run when called via workflow_call (from release workflow) or workflow_dispatch (manual)
-    # Skip only on direct tag pushes (release workflow handles those)
-    if: github.event_name == 'workflow_call' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_type != 'tag')
+    # No if condition needed - push only triggers on branches, workflow_call always runs
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -48,9 +47,7 @@ jobs:
         run: npm run build
 
   test:
-    # Always run when called via workflow_call (from release workflow) or workflow_dispatch (manual)
-    # Skip only on direct tag pushes (release workflow handles those)
-    if: github.event_name == 'workflow_call' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_type != 'tag')
+    # No if condition needed - push only triggers on branches, workflow_call always runs
     needs: lint  # Tests run after lint
     uses: ./.github/workflows/tests.yml
     # tests.yml runs: unit/integration tests (npm test)
