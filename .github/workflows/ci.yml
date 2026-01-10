@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   lint:
-    # Runs for workflow_call/workflow_dispatch/push/PR; tag pushes are excluded by trigger
+    if: github.event_name != 'push' || github.ref_type != 'tag'  # Skip on tag pushes
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,10 +46,8 @@ jobs:
         run: npm run build
 
   test:
-    # test.yml has its own condition and only supports workflow_call and workflow_dispatch
-    # When ci.yml is triggered by push/PR/workflow_call, calling test.yml via workflow_call will work
-    # test.yml will handle the condition checking internally
+    if: github.event_name != 'push' || github.ref_type != 'tag'  # Skip on tag pushes
     needs: lint  # Tests run after lint
-    uses: ./.github/workflows/test.yml
-    # test.yml runs: unit tests (npm test)
+    uses: ./.github/workflows/tests.yml
+    # tests.yml runs: unit/integration tests (npm test)
 
