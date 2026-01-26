@@ -4,6 +4,7 @@
   "description": "GitHub Action to read and parse CHANGELOG.md files from local paths or remote URLs",
   "main": "dist/index.js",
   "scripts": {
+    "prepare": "husky install",
     "build": "tsc && ncc build src/index.ts -o dist --source-map --license licenses.txt",
     "package": "npm run build",
     "test": "jest",
@@ -18,7 +19,7 @@
     "test:act:e2e": "act workflow_dispatch -W .github/workflows/e2e-tests.yml --eventpath .github/workflows/.act/event-workflow_dispatch.json",
     "test:act:release": "act push --eventpath .github/workflows/.act/event-release.json",
     "lint:act": "act -W .github/workflows/ci.yml -j lint",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src/**/*.ts --no-warn-ignored",
     "format": "prettier --write \"src/**/*.ts\""
   },
   "keywords": [
@@ -41,6 +42,7 @@
     "eslint": "^9.39.2",
     "jest": "^29.7.0",
     "prettier": "^3.6.2",
+    "husky": "^9.1.7",
     "ts-jest": "^29.1.1",
     "typescript": "^5.9.3"
   }
