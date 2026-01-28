@@ -15,8 +15,11 @@ pnpm-debug.log*
 # Environment variables
 .env
 .env.local
-.act.env
-.act.secrets
+
+# act local testing files
+.act.env.local
+.act.vars.local
+.act.secrets.local
 
 # IDE and editor files
 .idea/
@@ -32,3 +35,8 @@ pnpm-debug.log*
 # Test coverage
 coverage/
 .nyc_output/
+# Local dev (act)
+.env.*
+.secrets
+.secrets.*
+.actrc.local
