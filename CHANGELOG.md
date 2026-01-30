@@ -1,11 +1,13 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### [1.0.10](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v1.0.9...v1.0.10) (2026-01-30)
 
-## [Unreleased]
+
+### Bug Fixes
+
+* **release:** verify only runtime bundle; e2e from committed dist ([a1c93ac](https://github.com/LiquidLogicLabs/git-action-changelog-parser/commit/a1c93accdfb7dd5cb80af449f7ec31b1ac54d450))
 
 ## [1.0.6] - 2025-12-24
 
@@ -60,4 +62,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Version extraction and validation
 - Configuration file support
 - CI/CD workflows for testing and releases
-
