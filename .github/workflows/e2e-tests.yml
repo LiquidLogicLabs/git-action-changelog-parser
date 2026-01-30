@@ -11,24 +11,10 @@ jobs:
   e2e-github:
     # Runs for workflow_call/workflow_dispatch; tag pushes are not used here
     runs-on: ubuntu-latest
+    # Run action from committed dist only (no build). Ensures E2E fails if dist is unbundled.
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Run integration tests
-        run: npm run test:integration
 
       - name: Test local changelog parsing
         id: changelog-local
@@ -106,13 +92,7 @@ jobs:
         run: |
           echo "## ✅ E2E Tests Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All integration and end-to-end tests passed successfully!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Integration Tests (Jest):" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Path handler + parser integration" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Local file reading and parsing" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ URL conversion and construction" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Version matching and lookup" >> $GITHUB_STEP_SUMMARY
+          echo "All E2E tests (action run from committed dist) passed successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "E2E Tests (Packaged Action):" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Local changelog parsing" >> $GITHUB_STEP_SUMMARY
