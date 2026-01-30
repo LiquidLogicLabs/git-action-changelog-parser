@@ -25700,10 +25700,13 @@ async function run() {
             'none');
         const validationDepth = parseInt(core.getInput('validation_depth') || '10', 10);
         const configFileInput = core.getInput('config_file');
-        const debug = core.getInput('debug') === 'true' || process.env.ACTIONS_STEP_DEBUG === 'true';
+        const verboseInput = core.getInput('verbose') === 'true';
+        const debugInput = core.getInput('debug') === 'true';
+        const stepDebugEnabled = core.isDebug() || process.env.ACTIONS_STEP_DEBUG === 'true';
+        const debug = verboseInput || debugInput || stepDebugEnabled;
         const ignoreCertErrors = core.getInput('ignore_cert_errors') === 'true';
         // Enable ACTIONS_STEP_DEBUG if our debug flag is set
-        if (core.getInput('debug') === 'true' && !process.env.ACTIONS_STEP_DEBUG) {
+        if ((verboseInput || debugInput) && !process.env.ACTIONS_STEP_DEBUG) {
             process.env.ACTIONS_STEP_DEBUG = 'true';
         }
         // Debug logging helper (uses core.debug which respects ACTIONS_STEP_DEBUG)
