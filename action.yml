@@ -33,8 +33,12 @@ inputs:
     description: 'Repository platform type (auto, github, gitea, gitlab, bitbucket). Defaults to auto which attempts to detect from domain. Use explicit type for custom domains'
     required: false
     default: 'auto'
+  verbose:
+    description: 'Enable verbose debug logging. Also enabled when ACTIONS_STEP_DEBUG=true.'
+    required: false
+    default: 'false'
   debug:
-    description: 'Enable debug logging for troubleshooting. Set to true to see detailed information about URL construction, repository type detection, and HTTP requests'
+    description: 'Deprecated: use verbose instead. Enables debug logging for troubleshooting.'
     required: false
     default: 'false'
   ignore_cert_errors:
