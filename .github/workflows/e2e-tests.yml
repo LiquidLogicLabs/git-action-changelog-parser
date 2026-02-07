@@ -43,15 +43,15 @@ jobs:
           echo "Date: ${{ steps.changelog-blob.outputs.date }}"
           echo "Status: ${{ steps.changelog-blob.outputs.status }}"
 
-      - name: Test with repo_url input
+      - name: Test with repoUrl input
         id: changelog-repo-url
         uses: ./
         with:
-          repo_url: 'https://github.com/traefik/traefik'
+          repoUrl: 'https://github.com/traefik/traefik'
           ref: 'v3.6'
           version: 'v3.6.5'
 
-      - name: Display repo_url outputs
+      - name: Display repoUrl outputs
         run: |
           echo "Version: ${{ steps.changelog-repo-url.outputs.version }}"
           echo "Date: ${{ steps.changelog-repo-url.outputs.date }}"
@@ -75,7 +75,7 @@ jobs:
         id: changelog-404
         uses: ./
         with:
-          repo_url: 'https://github.com/traefik/traefik'
+          repoUrl: 'https://github.com/traefik/traefik'
           ref: 'nonexistent-branch'
         continue-on-error: true
 
@@ -98,6 +98,6 @@ jobs:
           echo "E2E Tests (Packaged Action):" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Local changelog parsing" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ GitHub blob URL (auto-converted)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ repo_url input" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ repoUrl input" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Repository root URL in path" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ 404 handling (nofound status)" >> $GITHUB_STEP_SUMMARY
