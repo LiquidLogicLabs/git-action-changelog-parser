@@ -141,7 +141,7 @@ Both approaches work the same way - the action will automatically detect that it
 | `validationLevel` | Validation level: `none`, `warn`, or `error` | No | `none` |
 | `validationDepth` | Number of entries to validate | No | `10` |
 | `configFile` | Path to configuration file | No | Auto-detect |
-| `debug` | Enable debug logging for troubleshooting. Set to `true` to see detailed information about URL construction, repository type detection, and HTTP requests. Also respects `ACTIONS_STEP_DEBUG` environment variable | No | `false` |
+| `verbose` | Enable debug logging for troubleshooting. Set to `true` to see detailed information about URL construction, repository type detection, and HTTP requests. Also respects `ACTIONS_STEP_DEBUG` environment variable | No | `false` |
 | `skipCertificateCheck` | Ignore SSL certificate errors (useful for self-hosted instances with self-signed certificates). **WARNING**: This is a security risk and should only be used with trusted self-hosted instances | No | `false` |
 
 ## Outputs
