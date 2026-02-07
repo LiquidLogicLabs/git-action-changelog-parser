@@ -244,7 +244,7 @@ async function fetchRemoteUrl(url, token, ignoreCertErrors = false) {
         agent = new https.Agent({
             rejectUnauthorized: false
         });
-        debugLog(`SSL certificate validation disabled (ignore_cert_errors=true)`);
+        debugLog(`SSL certificate validation disabled (skipCertificateCheck=true)`);
     }
     const tryFetch = async (urlToTry) => {
         // For Node.js 20, we need to use undici's fetch with a custom dispatcher

@@ -25643,6 +25643,89 @@ module.exports = {
 
 /***/ }),
 
+/***/ 2973:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getInputs = getInputs;
+const core = __importStar(__nccwpck_require__(7484));
+function getInputs() {
+    const path = core.getInput('path');
+    const repoUrl = core.getInput('repoUrl');
+    const refInput = core.getInput('ref');
+    const repoTypeInput = (core.getInput('repoType') || 'auto');
+    const token = core.getInput('token') || process.env.GITHUB_TOKEN;
+    const version = core.getInput('version');
+    const validationLevel = (core.getInput('validationLevel') || 'none');
+    const validationDepth = parseInt(core.getInput('validationDepth') || '10', 10);
+    const configFile = core.getInput('configFile');
+    const verboseInput = core.getBooleanInput('verbose');
+    const envStepDebug = (process.env.ACTIONS_STEP_DEBUG || '').toLowerCase();
+    const stepDebugEnabled = core.isDebug() || envStepDebug === 'true' || envStepDebug === '1';
+    const debugEnabled = verboseInput || stepDebugEnabled;
+    const skipCertificateCheck = core.getBooleanInput('skipCertificateCheck');
+    if (verboseInput && !process.env.ACTIONS_STEP_DEBUG) {
+        process.env.ACTIONS_STEP_DEBUG = 'true';
+    }
+    return {
+        path,
+        repoUrl,
+        ref: refInput || 'main',
+        repoType: repoTypeInput,
+        token,
+        version,
+        validationLevel,
+        validationDepth,
+        configFile,
+        verbose: verboseInput || stepDebugEnabled,
+        debugEnabled,
+        skipCertificateCheck,
+        hasPathInput: path !== '',
+        hasRepoUrlInput: repoUrl !== '',
+        hasRefInput: refInput !== '',
+        hasRepoTypeInput: core.getInput('repoType') !== '',
+        hasConfigFileInput: configFile !== '',
+    };
+}
+
+
+/***/ }),
+
 /***/ 9407:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -25684,31 +25767,23 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
+const config_1 = __nccwpck_require__(2973);
 const path_handler_1 = __nccwpck_require__(9193);
 const parser_1 = __nccwpck_require__(7196);
 async function run() {
     try {
-        // Get inputs
-        let path = core.getInput('path');
-        let repoUrl = core.getInput('repo_url');
-        let ref = core.getInput('ref') || 'main';
-        let repoType = (core.getInput('repo_type') ||
-            'auto');
-        const token = core.getInput('token') || process.env.GITHUB_TOKEN;
-        const version = core.getInput('version');
-        const validationLevel = (core.getInput('validation_level') ||
-            'none');
-        const validationDepth = parseInt(core.getInput('validation_depth') || '10', 10);
-        const configFileInput = core.getInput('config_file');
-        const verboseInput = core.getInput('verbose') === 'true';
-        const debugInput = core.getInput('debug') === 'true';
-        const stepDebugEnabled = core.isDebug() || process.env.ACTIONS_STEP_DEBUG === 'true';
-        const debug = verboseInput || debugInput || stepDebugEnabled;
-        const ignoreCertErrors = core.getInput('ignore_cert_errors') === 'true';
-        // Enable ACTIONS_STEP_DEBUG if our debug flag is set
-        if ((verboseInput || debugInput) && !process.env.ACTIONS_STEP_DEBUG) {
-            process.env.ACTIONS_STEP_DEBUG = 'true';
-        }
+        const inputs = (0, config_1.getInputs)();
+        let path = inputs.path;
+        let repoUrl = inputs.repoUrl;
+        let ref = inputs.ref;
+        let repoType = inputs.repoType;
+        const token = inputs.token;
+        const version = inputs.version;
+        const validationLevel = inputs.validationLevel;
+        const validationDepth = inputs.validationDepth;
+        const configFileInput = inputs.configFile;
+        const debug = inputs.debugEnabled;
+        const ignoreCertErrors = inputs.skipCertificateCheck;
         // Debug logging helper (uses core.debug which respects ACTIONS_STEP_DEBUG)
         const debugLog = (message) => {
             if (debug) {
@@ -25718,13 +25793,13 @@ async function run() {
         debugLog('=== Changelog Parser Action Debug Mode ===');
         debugLog(`Inputs received:`);
         debugLog(`  path: ${path || '(empty)'}`);
-        debugLog(`  repo_url: ${repoUrl || '(empty)'}`);
+        debugLog(`  repoUrl: ${repoUrl || '(empty)'}`);
         debugLog(`  ref: ${ref}`);
-        debugLog(`  repo_type: ${repoType}`);
+        debugLog(`  repoType: ${repoType}`);
         debugLog(`  version: ${version || '(empty)'}`);
-        debugLog(`  validation_level: ${validationLevel}`);
-        debugLog(`  validation_depth: ${validationDepth}`);
-        debugLog(`  config_file: ${configFileInput || '(empty)'}`);
+        debugLog(`  validationLevel: ${validationLevel}`);
+        debugLog(`  validationDepth: ${validationDepth}`);
+        debugLog(`  configFile: ${configFileInput || '(empty)'}`);
         debugLog(`  token: ${token ? '***' : '(empty)'}`);
         // Load configuration if provided
         let config = {
@@ -25751,35 +25826,35 @@ async function run() {
             }
         }
         // Override inputs from config if not explicitly provided
-        if (config.path && !core.getInput('path')) {
+        if (config.path && !inputs.hasPathInput) {
             path = config.path;
         }
-        if (config.repo_url && !core.getInput('repo_url')) {
+        if (config.repo_url && !inputs.hasRepoUrlInput) {
             repoUrl = config.repo_url;
         }
-        if (config.ref && !core.getInput('ref')) {
+        if (config.ref && !inputs.hasRefInput) {
             ref = config.ref;
         }
-        if (config.repo_type && !core.getInput('repo_type')) {
+        if (config.repo_type && !inputs.hasRepoTypeInput) {
             repoType = config.repo_type;
         }
         // Determine the final path/URL to use
         let finalPath;
         debugLog('=== Determining final path/URL ===');
-        // If repo_url is provided, it takes precedence (even if path has a default value)
+        // If repoUrl is provided, it takes precedence (even if path has a default value)
         if (repoUrl) {
-            debugLog(`Using repo_url (takes precedence): ${repoUrl}`);
+            debugLog(`Using repoUrl (takes precedence): ${repoUrl}`);
             debugLog(`  ref: ${ref}`);
-            debugLog(`  repo_type: ${repoType}`);
+            debugLog(`  repoType: ${repoType}`);
             finalPath = (0, path_handler_1.constructChangelogUrl)(repoUrl, ref, repoType);
-            core.info(`Constructed CHANGELOG.md URL from repo_url: ${finalPath}`);
+            core.info(`Constructed CHANGELOG.md URL from repoUrl: ${finalPath}`);
             debugLog(`  Constructed URL: ${finalPath}`);
         }
         // Check if path is a repository root URL
         else if (path && (0, path_handler_1.isRepoRootUrl)(path)) {
             debugLog(`Path is a repository root URL: ${path}`);
             debugLog(`  ref: ${ref}`);
-            debugLog(`  repo_type: ${repoType}`);
+            debugLog(`  repoType: ${repoType}`);
             finalPath = (0, path_handler_1.constructChangelogUrl)(path, ref, repoType);
             core.info(`Detected repo root URL, constructed CHANGELOG.md URL: ${finalPath}`);
             debugLog(`  Constructed URL: ${finalPath}`);
@@ -25800,7 +25875,7 @@ async function run() {
             debugLog(`  No token provided`);
         }
         if (ignoreCertErrors) {
-            debugLog(`  Ignoring SSL certificate errors`);
+            debugLog(`  Skipping TLS certificate verification`);
             core.warning('SSL certificate validation is disabled. This is a security risk and should only be used with self-hosted instances with self-signed certificates.');
         }
         // Read changelog content
@@ -26427,7 +26502,7 @@ async function fetchRemoteUrl(url, token, ignoreCertErrors = false) {
         agent = new https.Agent({
             rejectUnauthorized: false
         });
-        debugLog(`SSL certificate validation disabled (ignore_cert_errors=true)`);
+        debugLog(`SSL certificate validation disabled (skipCertificateCheck=true)`);
     }
     const tryFetch = async (urlToTry) => {
         // For Node.js 20, we need to use undici's fetch with a custom dispatcher

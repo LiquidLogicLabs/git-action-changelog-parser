@@ -1,0 +1,23 @@
+type RepoType = 'auto' | 'github' | 'gitea' | 'gitlab' | 'bitbucket';
+type ValidationLevel = 'none' | 'warn' | 'error';
+export type ParsedInputs = {
+    path: string;
+    repoUrl: string;
+    ref: string;
+    repoType: RepoType;
+    token?: string;
+    version: string;
+    validationLevel: ValidationLevel;
+    validationDepth: number;
+    configFile: string;
+    verbose: boolean;
+    debugEnabled: boolean;
+    skipCertificateCheck: boolean;
+    hasPathInput: boolean;
+    hasRepoUrlInput: boolean;
+    hasRefInput: boolean;
+    hasRepoTypeInput: boolean;
+    hasConfigFileInput: boolean;
+};
+export declare function getInputs(): ParsedInputs;
+export {};
