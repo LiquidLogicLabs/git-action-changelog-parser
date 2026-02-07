@@ -32,16 +32,17 @@ describe('Changelog Parser Action', () => {
     mockCore.getInput.mockImplementation((name: string) => {
       const defaults: Record<string, string> = {
         path: '',
-        repo_url: '',
+        repoUrl: '',
         ref: 'main',
         token: '',
         version: '',
-        validation_level: 'none',
-        validation_depth: '10',
-        config_file: '',
+        validationLevel: 'none',
+        validationDepth: '10',
+        configFile: '',
       };
       return defaults[name] || '';
     });
+    mockCore.getBooleanInput.mockImplementation(() => false);
     
     mockCore.setOutput = jest.fn();
     mockCore.info = jest.fn();
@@ -81,10 +82,10 @@ describe('Changelog Parser Action', () => {
     process.env = originalEnv;
   });
 
-  describe('repo_url handling', () => {
-    it('should construct CHANGELOG.md URL when path is blank and repo_url is provided', async () => {
+  describe('repoUrl handling', () => {
+    it('should construct CHANGELOG.md URL when path is blank and repoUrl is provided', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
-        if (name === 'repo_url') return 'https://github.com/owner/repo';
+        if (name === 'repoUrl') return 'https://github.com/owner/repo';
         if (name === 'ref') return 'main';
         if (name === 'version') return '1.0.0';
         return '';
@@ -109,9 +110,9 @@ describe('Changelog Parser Action', () => {
       expect(mockReadContent).toHaveBeenCalledWith('https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md', undefined, false);
     });
 
-    it('should use provided ref when constructing URL from repo_url', async () => {
+    it('should use provided ref when constructing URL from repoUrl', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
-        if (name === 'repo_url') return 'https://github.com/owner/repo';
+        if (name === 'repoUrl') return 'https://github.com/owner/repo';
         if (name === 'ref') return 'develop';
         if (name === 'version') return '1.0.0';
         return '';
@@ -137,7 +138,7 @@ describe('Changelog Parser Action', () => {
 
     it('should default to main when ref is not provided', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
-        if (name === 'repo_url') return 'https://github.com/owner/repo';
+        if (name === 'repoUrl') return 'https://github.com/owner/repo';
         if (name === 'ref') return '';
         if (name === 'version') return '1.0.0';
         return '';
@@ -222,7 +223,7 @@ describe('Changelog Parser Action', () => {
   describe('404 error handling', () => {
     it('should set status to nofound when CHANGELOG.md is not found', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
-        if (name === 'repo_url') return 'https://github.com/owner/repo';
+        if (name === 'repoUrl') return 'https://github.com/owner/repo';
         if (name === 'ref') return 'main';
         return '';
       });
@@ -348,11 +349,11 @@ describe('Changelog Parser Action', () => {
   });
 
   describe('validation', () => {
-    it('should call validateChangelog when validation_level is warn', async () => {
+    it('should call validateChangelog when validationLevel is warn', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
         if (name === 'path') return './CHANGELOG.md';
         if (name === 'version') return '1.0.0';
-        if (name === 'validation_level') return 'warn';
+        if (name === 'validationLevel') return 'warn';
         return '';
       });
       
@@ -379,11 +380,11 @@ describe('Changelog Parser Action', () => {
       expect(mockValidateChangelog).toHaveBeenCalled();
     });
 
-    it('should call validateChangelog when validation_level is error', async () => {
+    it('should call validateChangelog when validationLevel is error', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
         if (name === 'path') return './CHANGELOG.md';
         if (name === 'version') return '1.0.0';
-        if (name === 'validation_level') return 'error';
+        if (name === 'validationLevel') return 'error';
         return '';
       });
       
@@ -412,11 +413,11 @@ describe('Changelog Parser Action', () => {
   });
 
   describe('config file handling', () => {
-    it('should load config file when config_file is provided', async () => {
+    it('should load config file when configFile is provided', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
         if (name === 'path') return './CHANGELOG.md';
         if (name === 'version') return '1.0.0';
-        if (name === 'config_file') return '.changelog-reader.json';
+        if (name === 'configFile') return '.changelog-reader.json';
         return '';
       });
       
@@ -442,7 +443,7 @@ describe('Changelog Parser Action', () => {
       expect(mockLoadConfig).toHaveBeenCalledWith('.changelog-reader.json');
     });
 
-    it('should auto-detect config file when config_file is not provided', async () => {
+    it('should auto-detect config file when configFile is not provided', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
         if (name === 'path') return './CHANGELOG.md';
         if (name === 'version') return '1.0.0';
@@ -472,12 +473,12 @@ describe('Changelog Parser Action', () => {
     });
   });
 
-  describe('repo_type explicit specification', () => {
-    it('should use explicit repo_type when provided', async () => {
+  describe('repoType explicit specification', () => {
+    it('should use explicit repoType when provided', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
-        if (name === 'repo_url') return 'https://git.ravenwolf.org/owner/repo';
+        if (name === 'repoUrl') return 'https://git.ravenwolf.org/owner/repo';
         if (name === 'ref') return 'main';
-        if (name === 'repo_type') return 'gitea';
+        if (name === 'repoType') return 'gitea';
         if (name === 'version') return '1.0.0';
         return '';
       });
@@ -505,14 +506,14 @@ describe('Changelog Parser Action', () => {
     });
   });
 
-  describe('ignore_cert_errors', () => {
-    it('should pass ignore_cert_errors to readContent', async () => {
+  describe('skipCertificateCheck', () => {
+    it('should pass skipCertificateCheck to readContent', async () => {
       mockCore.getInput.mockImplementation((name: string) => {
         if (name === 'path') return 'https://example.com/CHANGELOG.md';
         if (name === 'version') return '1.0.0';
-        if (name === 'ignore_cert_errors') return 'true';
         return '';
       });
+      mockCore.getBooleanInput.mockImplementation((name: string) => name === 'skipCertificateCheck');
       
       mockIsRepoRootUrl.mockReturnValue(false);
       mockReadContent.mockResolvedValue('## [1.0.0] - 2024-01-01\n\n- Initial release');

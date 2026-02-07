@@ -233,7 +233,7 @@ async function fetchRemoteUrl(url: string, token?: string, ignoreCertErrors: boo
     agent = new https.Agent({
       rejectUnauthorized: false
     });
-    debugLog(`SSL certificate validation disabled (ignore_cert_errors=true)`);
+    debugLog(`SSL certificate validation disabled (skipCertificateCheck=true)`);
   }
 
   const tryFetch = async (urlToTry: string): Promise<Response> => {

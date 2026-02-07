@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { getInputs } from './config';
 import { readContent, isRepoRootUrl, constructChangelogUrl } from './path-handler';
 import {
   parseChangelog,
@@ -11,31 +12,18 @@ import { ActionConfig } from './types';
 
 export async function run(): Promise<void> {
   try {
-    // Get inputs
-    let path = core.getInput('path');
-    let repoUrl = core.getInput('repo_url');
-    let ref = core.getInput('ref') || 'main';
-    let repoType = (core.getInput('repo_type') ||
-      'auto') as 'auto' | 'github' | 'gitea' | 'gitlab' | 'bitbucket';
-    const token = core.getInput('token') || process.env.GITHUB_TOKEN;
-    const version = core.getInput('version');
-    const validationLevel = (core.getInput('validation_level') ||
-      'none') as 'none' | 'warn' | 'error';
-    const validationDepth = parseInt(
-      core.getInput('validation_depth') || '10',
-      10
-    );
-    const configFileInput = core.getInput('config_file');
-    const verboseInput = core.getInput('verbose') === 'true';
-    const debugInput = core.getInput('debug') === 'true';
-    const stepDebugEnabled = core.isDebug() || process.env.ACTIONS_STEP_DEBUG === 'true';
-    const debug = verboseInput || debugInput || stepDebugEnabled;
-    const ignoreCertErrors = core.getInput('ignore_cert_errors') === 'true';
-    
-    // Enable ACTIONS_STEP_DEBUG if our debug flag is set
-    if ((verboseInput || debugInput) && !process.env.ACTIONS_STEP_DEBUG) {
-      process.env.ACTIONS_STEP_DEBUG = 'true';
-    }
+    const inputs = getInputs();
+    let path = inputs.path;
+    let repoUrl = inputs.repoUrl;
+    let ref = inputs.ref;
+    let repoType = inputs.repoType;
+    const token = inputs.token;
+    const version = inputs.version;
+    const validationLevel = inputs.validationLevel;
+    const validationDepth = inputs.validationDepth;
+    const configFileInput = inputs.configFile;
+    const debug = inputs.debugEnabled;
+    const ignoreCertErrors = inputs.skipCertificateCheck;
 
     // Debug logging helper (uses core.debug which respects ACTIONS_STEP_DEBUG)
     const debugLog = (message: string) => {
@@ -47,13 +35,13 @@ export async function run(): Promise<void> {
     debugLog('=== Changelog Parser Action Debug Mode ===');
     debugLog(`Inputs received:`);
     debugLog(`  path: ${path || '(empty)'}`);
-    debugLog(`  repo_url: ${repoUrl || '(empty)'}`);
+    debugLog(`  repoUrl: ${repoUrl || '(empty)'}`);
     debugLog(`  ref: ${ref}`);
-    debugLog(`  repo_type: ${repoType}`);
+    debugLog(`  repoType: ${repoType}`);
     debugLog(`  version: ${version || '(empty)'}`);
-    debugLog(`  validation_level: ${validationLevel}`);
-    debugLog(`  validation_depth: ${validationDepth}`);
-    debugLog(`  config_file: ${configFileInput || '(empty)'}`);
+    debugLog(`  validationLevel: ${validationLevel}`);
+    debugLog(`  validationDepth: ${validationDepth}`);
+    debugLog(`  configFile: ${configFileInput || '(empty)'}`);
     debugLog(`  token: ${token ? '***' : '(empty)'}`);
 
     // Load configuration if provided
@@ -81,16 +69,16 @@ export async function run(): Promise<void> {
     }
 
     // Override inputs from config if not explicitly provided
-    if (config.path && !core.getInput('path')) {
+    if (config.path && !inputs.hasPathInput) {
       path = config.path;
     }
-    if (config.repo_url && !core.getInput('repo_url')) {
+    if (config.repo_url && !inputs.hasRepoUrlInput) {
       repoUrl = config.repo_url;
     }
-    if (config.ref && !core.getInput('ref')) {
+    if (config.ref && !inputs.hasRefInput) {
       ref = config.ref;
     }
-    if (config.repo_type && !core.getInput('repo_type')) {
+    if (config.repo_type && !inputs.hasRepoTypeInput) {
       repoType = config.repo_type;
     }
 
@@ -98,20 +86,20 @@ export async function run(): Promise<void> {
     let finalPath: string;
     
     debugLog('=== Determining final path/URL ===');
-    // If repo_url is provided, it takes precedence (even if path has a default value)
+    // If repoUrl is provided, it takes precedence (even if path has a default value)
     if (repoUrl) {
-      debugLog(`Using repo_url (takes precedence): ${repoUrl}`);
+      debugLog(`Using repoUrl (takes precedence): ${repoUrl}`);
       debugLog(`  ref: ${ref}`);
-      debugLog(`  repo_type: ${repoType}`);
+      debugLog(`  repoType: ${repoType}`);
       finalPath = constructChangelogUrl(repoUrl, ref, repoType);
-      core.info(`Constructed CHANGELOG.md URL from repo_url: ${finalPath}`);
+      core.info(`Constructed CHANGELOG.md URL from repoUrl: ${finalPath}`);
       debugLog(`  Constructed URL: ${finalPath}`);
     }
     // Check if path is a repository root URL
     else if (path && isRepoRootUrl(path)) {
       debugLog(`Path is a repository root URL: ${path}`);
       debugLog(`  ref: ${ref}`);
-      debugLog(`  repo_type: ${repoType}`);
+      debugLog(`  repoType: ${repoType}`);
       finalPath = constructChangelogUrl(path, ref, repoType);
       core.info(`Detected repo root URL, constructed CHANGELOG.md URL: ${finalPath}`);
       debugLog(`  Constructed URL: ${finalPath}`);
@@ -133,7 +121,7 @@ export async function run(): Promise<void> {
       debugLog(`  No token provided`);
     }
     if (ignoreCertErrors) {
-      debugLog(`  Ignoring SSL certificate errors`);
+      debugLog(`  Skipping TLS certificate verification`);
       core.warning('SSL certificate validation is disabled. This is a security risk and should only be used with self-hosted instances with self-signed certificates.');
     }
 
