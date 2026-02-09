@@ -15,7 +15,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 - ✅ Read changelogs from local file paths
 - ✅ Read changelogs from remote URLs (GitHub, GitLab, Bitbucket, Gitea, and any HTTP server)
 - ✅ Automatic blob-to-raw URL conversion for GitHub, GitLab, Bitbucket, and Gitea (both cloud and self-hosted)
-- ✅ Automatic CHANGELOG.md detection from repository root URLs (via `repoUrl` input or detecting repo root in `path`)
+- ✅ Automatic CHANGELOG.md detection from repository root URLs (via `repo-url` input or detecting repo root in `path`)
 - ✅ Graceful handling of missing CHANGELOG.md files (returns `nofound` status instead of failing)
 - ✅ Optional authentication token support for remote URLs
 - ✅ Keep a Changelog format parsing
@@ -91,8 +91,8 @@ For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), you can exp
   uses: LiquidLogicLabs/changelog-parser-action@v1
   id: changelog
   with:
-    repoUrl: 'https://git.ravenwolf.org/owner/repo'
-    repoType: 'gitea'  # Explicitly specify Gitea for custom domains
+    repo-url: 'https://git.ravenwolf.org/owner/repo'
+    repo-type: 'gitea'  # Explicitly specify Gitea for custom domains
     ref: 'main'
     version: '1.2.3'
     token: ${{ secrets.GITEA_TOKEN }}
@@ -107,7 +107,7 @@ You can provide a repository URL and the action will automatically fetch `CHANGE
   uses: LiquidLogicLabs/changelog-parser-action@v1
   id: changelog
   with:
-    repoUrl: 'https://github.com/owner/repo'
+    repo-url: 'https://github.com/owner/repo'
     ref: 'main'
     version: '1.2.3'
 ```
@@ -133,16 +133,20 @@ Both approaches work the same way - the action will automatically detect that it
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `path` | Path to changelog file or URL. Can also be a repository root URL (e.g., `https://github.com/owner/repo`) | No | `./CHANGELOG.md` |
-| `repoUrl` | Repository URL (e.g., `https://github.com/owner/repo`). When `path` is blank, CHANGELOG.md will be fetched from the root of this repository | No | - |
-| `ref` | Branch or ref to use when constructing CHANGELOG.md URL from `repoUrl` or repository root URL in `path` | No | `main` |
-| `repoType` | Repository platform type: `auto`, `github`, `gitea`, `gitlab`, or `bitbucket`. Use explicit type for custom domains (e.g., `git.ravenwolf.org`). Defaults to `auto` which attempts to detect from domain | No | `auto` |
+| `repo-url` | Repository URL (e.g., `https://github.com/owner/repo`). When `path` is blank, CHANGELOG.md will be fetched from the root of this repository | No | - |
+| `ref` | Branch or ref to use when constructing CHANGELOG.md URL from `repo-url` or repository root URL in `path` | No | `main` |
+| `repo-type` | Repository platform type: `auto`, `github`, `gitea`, `gitlab`, or `bitbucket`. Use explicit type for custom domains (e.g., `git.ravenwolf.org`). Defaults to `auto` which attempts to detect from domain | No | `auto` |
 | `token` | Authentication token for remote URLs | No | `${{ github.token }}` |
 | `version` | Version to retrieve (or "Unreleased") | No | Latest version |
-| `validationLevel` | Validation level: `none`, `warn`, or `error` | No | `none` |
-| `validationDepth` | Number of entries to validate | No | `10` |
-| `configFile` | Path to configuration file | No | Auto-detect |
+| `validation-level` | Validation level: `none`, `warn`, or `error` | No | `none` |
+| `validation-depth` | Number of entries to validate | No | `10` |
+| `config-file` | Path to configuration file | No | Auto-detect |
 | `verbose` | Enable debug logging for troubleshooting. Set to `true` to see detailed information about URL construction, repository type detection, and HTTP requests. Also respects `ACTIONS_STEP_DEBUG` environment variable | No | `false` |
-| `skipCertificateCheck` | Ignore SSL certificate errors (useful for self-hosted instances with self-signed certificates). **WARNING**: This is a security risk and should only be used with trusted self-hosted instances | No | `false` |
+| `skip-certificate-check` | Ignore SSL certificate errors (useful for self-hosted instances with self-signed certificates). **WARNING**: This is a security risk and should only be used with trusted self-hosted instances | No | `false` |
+
+## Permissions
+
+No special permissions are required. Typical workflows need `contents: read` for checkout.
 
 ## Outputs
 
@@ -174,7 +178,7 @@ Both approaches work the same way - the action will automatically detect that it
 - **Raw**: `https://gitea.com/owner/repo/raw/branch/CHANGELOG.md`
 - **Blob (auto-converted)**: `https://gitea.com/owner/repo/src/branch/CHANGELOG.md`
 - **Self-hosted**: `https://your-gitea.com/owner/repo/src/branch/CHANGELOG.md`
-- **Custom domain**: For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), use `repoType: 'gitea'` to ensure correct URL format
+- **Custom domain**: For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), use `repo-type: 'gitea'` to ensure correct URL format
 
 ### Any HTTP Server
 - `https://example.com/path/to/CHANGELOG.md`
@@ -194,11 +198,11 @@ You can use a configuration file instead of specifying options in your workflow.
 ```json
 {
   "path": "./CHANGELOG.md",
-  "repoUrl": "https://github.com/owner/repo",
+  "repo-url": "https://github.com/owner/repo",
   "ref": "main",
-  "repoType": "auto",
-  "validationLevel": "warn",
-  "validationDepth": 10
+  "repo-type": "auto",
+  "validation-level": "warn",
+  "validation-depth": 10
 }
 ```
 
@@ -211,7 +215,7 @@ The action can validate changelog entries for:
 - Date format (YYYY-MM-DD)
 - Empty entries
 
-Set `validationLevel` to:
+Set `validation-level` to:
 - `none`: No validation (default)
 - `warn`: Print warnings but don't fail
 - `error`: Fail the action if validation errors are found
@@ -242,7 +246,7 @@ jobs:
         id: changelog_reader
         uses: LiquidLogicLabs/changelog-parser-action@v1
         with:
-          validationLevel: warn
+          validation-level: 'warn'
           version: ${{ steps.tagName.outputs.current_version }}
           path: ./CHANGELOG.md
 
@@ -255,7 +259,7 @@ jobs:
           prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
-          allowUpdates: true
+          allow-updates: true
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
