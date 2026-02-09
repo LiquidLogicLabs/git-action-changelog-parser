@@ -47,7 +47,7 @@ jobs:
         id: changelog-repo-url
         uses: ./
         with:
-          repoUrl: 'https://github.com/traefik/traefik'
+          repo-url: 'https://github.com/traefik/traefik'
           ref: 'v3.6'
           version: 'v3.6.5'
 
@@ -75,7 +75,7 @@ jobs:
         id: changelog-404
         uses: ./
         with:
-          repoUrl: 'https://github.com/traefik/traefik'
+          repo-url: 'https://github.com/traefik/traefik'
           ref: 'nonexistent-branch'
         continue-on-error: true
 

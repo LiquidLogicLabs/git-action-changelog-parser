@@ -11,7 +11,7 @@ export type ParsedInputs = {
     validationDepth: number;
     configFile: string;
     verbose: boolean;
-    debugEnabled: boolean;
+    debugMode: boolean;
     skipCertificateCheck: boolean;
     hasPathInput: boolean;
     hasRepoUrlInput: boolean;

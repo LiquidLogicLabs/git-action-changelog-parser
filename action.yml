@@ -11,25 +11,25 @@ inputs:
   version:
     description: 'The exact version of the log entry to retrieve or "Unreleased" for the unreleased entry. Defaults to the last version number'
     required: false
-  validationLevel:
+  validation-level:
     description: 'Specifies at which level the validation system is set. Can be none, warn, or error'
     required: false
     default: 'none'
-  validationDepth:
+  validation-depth:
     description: 'Specifies how many entries to validate in the CHANGELOG.md file'
     required: false
     default: '10'
-  configFile:
+  config-file:
     description: 'Path to a configuration file. If not specified, will look for .changelog-reader.json, .changelog-reader.yml, .changelog-reader.yaml, .changelogrc, or .changelogrc.json in the repository root'
     required: false
-  repoUrl:
+  repo-url:
     description: 'Repository URL (e.g., https://github.com/owner/repo). When path is blank, CHANGELOG.md will be fetched from the root of this repository'
     required: false
   ref:
     description: 'Branch or ref to use when constructing CHANGELOG.md URL from repoUrl (defaults to main)'
     required: false
     default: 'main'
-  repoType:
+  repo-type:
     description: 'Repository platform type (auto, github, gitea, gitlab, bitbucket). Defaults to auto which attempts to detect from domain. Use explicit type for custom domains'
     required: false
     default: 'auto'
@@ -37,7 +37,7 @@ inputs:
     description: 'Enable verbose debug logging. Also enabled when ACTIONS_STEP_DEBUG=true.'
     required: false
     default: 'false'
-  skipCertificateCheck:
+  skip-certificate-check:
     description: 'Skip TLS certificate verification (useful for self-hosted instances with self-signed certificates). WARNING: This is a security risk and should only be used with trusted self-hosted instances'
     required: false
     default: 'false'

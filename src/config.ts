@@ -3,6 +3,10 @@ import * as core from '@actions/core';
 type RepoType = 'auto' | 'github' | 'gitea' | 'gitlab' | 'bitbucket';
 type ValidationLevel = 'none' | 'warn' | 'error';
 
+function parseBoolean(val?: string): boolean {
+  return val?.toLowerCase() === 'true' || val === '1';
+}
+
 export type ParsedInputs = {
   path: string;
   repoUrl: string;
@@ -14,7 +18,7 @@ export type ParsedInputs = {
   validationDepth: number;
   configFile: string;
   verbose: boolean;
-  debugEnabled: boolean;
+  debugMode: boolean;
   skipCertificateCheck: boolean;
   hasPathInput: boolean;
   hasRepoUrlInput: boolean;
@@ -25,19 +29,19 @@ export type ParsedInputs = {
 
 export function getInputs(): ParsedInputs {
   const path = core.getInput('path');
-  const repoUrl = core.getInput('repoUrl');
+  const repoUrl = core.getInput('repo-url');
   const refInput = core.getInput('ref');
-  const repoTypeInput = (core.getInput('repoType') || 'auto') as RepoType;
+  const repoTypeInput = (core.getInput('repo-type') || 'auto') as RepoType;
   const token = core.getInput('token') || process.env.GITHUB_TOKEN;
   const version = core.getInput('version');
-  const validationLevel = (core.getInput('validationLevel') || 'none') as ValidationLevel;
-  const validationDepth = parseInt(core.getInput('validationDepth') || '10', 10);
-  const configFile = core.getInput('configFile');
+  const validationLevel = (core.getInput('validation-level') || 'none') as ValidationLevel;
+  const validationDepth = parseInt(core.getInput('validation-depth') || '10', 10);
+  const configFile = core.getInput('config-file');
   const verboseInput = core.getBooleanInput('verbose');
-  const envStepDebug = (process.env.ACTIONS_STEP_DEBUG || '').toLowerCase();
-  const stepDebugEnabled = core.isDebug() || envStepDebug === 'true' || envStepDebug === '1';
-  const debugEnabled = verboseInput || stepDebugEnabled;
-  const skipCertificateCheck = core.getBooleanInput('skipCertificateCheck');
+  const debugMode =
+    (typeof core.isDebug === 'function' && core.isDebug()) || parseBoolean(process.env.ACTIONS_STEP_DEBUG) || parseBoolean(process.env.ACTIONS_RUNNER_DEBUG) || parseBoolean(process.env.RUNNER_DEBUG);
+  const verbose = verboseInput || debugMode;
+  const skipCertificateCheck = core.getBooleanInput('skip-certificate-check');
 
   if (verboseInput && !process.env.ACTIONS_STEP_DEBUG) {
     process.env.ACTIONS_STEP_DEBUG = 'true';
@@ -53,13 +57,13 @@ export function getInputs(): ParsedInputs {
     validationLevel,
     validationDepth,
     configFile,
-    verbose: verboseInput || stepDebugEnabled,
-    debugEnabled,
+    verbose,
+    debugMode,
     skipCertificateCheck,
     hasPathInput: path !== '',
     hasRepoUrlInput: repoUrl !== '',
     hasRefInput: refInput !== '',
-    hasRepoTypeInput: core.getInput('repoType') !== '',
+    hasRepoTypeInput: core.getInput('repo-type') !== '',
     hasConfigFileInput: configFile !== '',
   };
 }
