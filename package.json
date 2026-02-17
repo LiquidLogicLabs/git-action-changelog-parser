@@ -1,6 +1,6 @@
 {
   "name": "changelog-parser-action",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "GitHub Action to read and parse CHANGELOG.md files from local paths or remote URLs",
   "main": "dist/index.js",
   "scripts": {
