@@ -4,6 +4,10 @@ on:
   workflow_call:  # Called by release workflow
   workflow_dispatch:  # Manual trigger only
 
+concurrency:
+  group: ${{ github.workflow || 'E2E Tests' }}-${{ github.ref || github.sha }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -21,8 +25,8 @@ jobs:
         uses: ./
         with:
           path: ./CHANGELOG.md
-          # When run from release (tag ref), CHANGELOG at tag has no ## [Unreleased]; use a version that exists (## [1.0.6])
-          version: ${{ github.ref_type == 'tag' && '1.0.6' || 'Unreleased' }}
+          # Use a version that exists in this repo's CHANGELOG (no ## [Unreleased] section; 2.0.0 is first section on branch, 1.0.6 on tag)
+          version: ${{ github.ref_type == 'tag' && '1.0.6' || '2.0.0' }}
 
       - name: Display local outputs
         run: |
