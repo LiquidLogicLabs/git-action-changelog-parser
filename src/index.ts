@@ -1,6 +1,12 @@
 import * as core from '@actions/core';
+import * as fs from 'fs';
+import * as nodePath from 'path';
 import { getInputs } from './config';
-import { readContent, isRepoRootUrl, constructChangelogUrl } from './path-handler';
+import {
+  readContent,
+  isRepoRootUrl,
+  constructChangelogUrl,
+} from './path-handler';
 import {
   parseChangelog,
   validateChangelog,
@@ -24,6 +30,7 @@ export async function run(): Promise<void> {
     const validationDepth = inputs.validationDepth;
     const configFileInput = inputs.configFile;
     const ignoreCertErrors = inputs.skipCertificateCheck;
+    const outputFile = inputs.outputFile;
 
     const logger = new Logger(inputs.verbose, inputs.debugMode);
 
@@ -96,7 +103,9 @@ export async function run(): Promise<void> {
       logger.verboseInfo(`  ref: ${ref}`);
       logger.verboseInfo(`  repo-type: ${repoType}`);
       finalPath = constructChangelogUrl(path, ref, repoType);
-      core.info(`Detected repo root URL, constructed CHANGELOG.md URL: ${finalPath}`);
+      core.info(
+        `Detected repo root URL, constructed CHANGELOG.md URL: ${finalPath}`
+      );
       logger.verboseInfo(`  Constructed URL: ${finalPath}`);
     }
     // Use path as-is (default behavior)
@@ -109,7 +118,9 @@ export async function run(): Promise<void> {
 
     core.info(`Reading changelog from: ${finalPath}`);
     logger.verboseInfo(`Attempting to read content from: ${finalPath}`);
-    logger.verboseInfo(`  Is URL: ${finalPath.startsWith('http://') || finalPath.startsWith('https://')}`);
+    logger.verboseInfo(
+      `  Is URL: ${finalPath.startsWith('http://') || finalPath.startsWith('https://')}`
+    );
     if (token) {
       logger.debug(`  Token provided: ${token.substring(0, 4)}...`);
     } else {
@@ -117,18 +128,27 @@ export async function run(): Promise<void> {
     }
     if (ignoreCertErrors) {
       logger.verboseInfo(`  Skipping TLS certificate verification`);
-      core.warning('SSL certificate validation is disabled. This is a security risk and should only be used with self-hosted instances with self-signed certificates.');
+      core.warning(
+        'SSL certificate validation is disabled. This is a security risk and should only be used with self-hosted instances with self-signed certificates.'
+      );
     }
 
     // Read changelog content
     let content: string;
     try {
       content = await readContent(finalPath, token, ignoreCertErrors);
-      logger.verboseInfo(`Successfully read ${content.length} characters from changelog`);
+      logger.verboseInfo(
+        `Successfully read ${content.length} characters from changelog`
+      );
     } catch (error) {
-      logger.debug(`Error reading changelog: ${error instanceof Error ? error.message : String(error)}`);
+      logger.debug(
+        `Error reading changelog: ${error instanceof Error ? error.message : String(error)}`
+      );
       // Check if it's a 404 error (file not found)
-      if (error instanceof Error && (error.message.includes('404') || error.message.includes('not found'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('404') || error.message.includes('not found'))
+      ) {
         core.info('CHANGELOG.md not found at the specified location');
         core.setOutput('version', '');
         core.setOutput('date', '');
@@ -158,7 +178,9 @@ export async function run(): Promise<void> {
     if (logger.isVerbose() && parsed.entries.length > 0) {
       logger.verboseInfo('Available versions:');
       parsed.entries.slice(0, 10).forEach((entry, idx) => {
-        logger.verboseInfo(`  ${idx + 1}. ${entry.version} (${entry.status})${entry.date ? ` - ${entry.date}` : ''}`);
+        logger.verboseInfo(
+          `  ${idx + 1}. ${entry.version} (${entry.status})${entry.date ? ` - ${entry.date}` : ''}`
+        );
       });
       if (parsed.entries.length > 10) {
         logger.verboseInfo(`  ... and ${parsed.entries.length - 10} more`);
@@ -192,7 +214,9 @@ export async function run(): Promise<void> {
     const entry = findVersionEntry(parsed, version);
 
     if (!entry) {
-      logger.verboseInfo(`Version entry not found. Available versions: ${parsed.entries.map(e => e.version).join(', ')}`);
+      logger.verboseInfo(
+        `Version entry not found. Available versions: ${parsed.entries.map((e) => e.version).join(', ')}`
+      );
       const versionMsg = version
         ? `Version "${version}" not found`
         : 'No version entry found';
@@ -206,6 +230,19 @@ export async function run(): Promise<void> {
     core.setOutput('date', entry.date || '');
     core.setOutput('status', entry.status);
     core.setOutput('changes', entry.changes);
+
+    const changesEscaped = entry.changes
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\n/g, '\\n');
+    core.setOutput('changes-escaped', changesEscaped);
+
+    if (outputFile) {
+      const resolvedPath = nodePath.resolve(outputFile);
+      await fs.promises.writeFile(resolvedPath, entry.changes, 'utf8');
+      core.info(`Changelog changes written to: ${resolvedPath}`);
+      core.setOutput('changes-file', resolvedPath);
+    }
 
     core.info('Changelog parsed successfully');
   } catch (error) {

@@ -13,6 +13,7 @@ export type ParsedInputs = {
     verbose: boolean;
     debugMode: boolean;
     skipCertificateCheck: boolean;
+    outputFile: string;
     hasPathInput: boolean;
     hasRepoUrlInput: boolean;
     hasRefInput: boolean;

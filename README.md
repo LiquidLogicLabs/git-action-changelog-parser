@@ -22,6 +22,8 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 - ✅ Version extraction and validation
 - ✅ Configuration file support
 - ✅ No GitHub API dependencies (uses standard HTTP only)
+- ✅ Escaped single-line output (`changes-escaped`) for safe use in `commit_message`, `tag_message`, and similar parameters
+- ✅ File output support (`output-file`) for passing changelog content to actions that accept a file path
 
 ## Usage
 
@@ -92,7 +94,7 @@ For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), you can exp
   id: changelog
   with:
     repo-url: 'https://git.ravenwolf.org/owner/repo'
-    repo-type: 'gitea'  # Explicitly specify Gitea for custom domains
+    repo-type: 'gitea' # Explicitly specify Gitea for custom domains
     ref: 'main'
     version: '1.2.3'
     token: ${{ secrets.GITEA_TOKEN }}
@@ -130,19 +132,20 @@ Both approaches work the same way - the action will automatically detect that it
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `path` | Path to changelog file or URL. Can also be a repository root URL (e.g., `https://github.com/owner/repo`) | No | `./CHANGELOG.md` |
-| `repo-url` | Repository URL (e.g., `https://github.com/owner/repo`). When `path` is blank, CHANGELOG.md will be fetched from the root of this repository | No | - |
-| `ref` | Branch or ref to use when constructing CHANGELOG.md URL from `repo-url` or repository root URL in `path` | No | `main` |
-| `repo-type` | Repository platform type: `auto`, `github`, `gitea`, `gitlab`, or `bitbucket`. Use explicit type for custom domains (e.g., `git.ravenwolf.org`). Defaults to `auto` which attempts to detect from domain | No | `auto` |
-| `token` | Authentication token for remote URLs | No | `${{ github.token }}` |
-| `version` | Version to retrieve (or "Unreleased") | No | Latest version |
-| `validation-level` | Validation level: `none`, `warn`, or `error` | No | `none` |
-| `validation-depth` | Number of entries to validate | No | `10` |
-| `config-file` | Path to configuration file | No | Auto-detect |
-| `verbose` | Enable debug logging for troubleshooting. Set to `true` to see detailed information about URL construction, repository type detection, and HTTP requests. Also respects `ACTIONS_STEP_DEBUG` environment variable | No | `false` |
-| `skip-certificate-check` | Ignore SSL certificate errors (useful for self-hosted instances with self-signed certificates). **WARNING**: This is a security risk and should only be used with trusted self-hosted instances | No | `false` |
+| Input                    | Description                                                                                                                                                                                                       | Required | Default               |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------- |
+| `path`                   | Path to changelog file or URL. Can also be a repository root URL (e.g., `https://github.com/owner/repo`)                                                                                                          | No       | `./CHANGELOG.md`      |
+| `repo-url`               | Repository URL (e.g., `https://github.com/owner/repo`). When `path` is blank, CHANGELOG.md will be fetched from the root of this repository                                                                       | No       | -                     |
+| `ref`                    | Branch or ref to use when constructing CHANGELOG.md URL from `repo-url` or repository root URL in `path`                                                                                                          | No       | `main`                |
+| `repo-type`              | Repository platform type: `auto`, `github`, `gitea`, `gitlab`, or `bitbucket`. Use explicit type for custom domains (e.g., `git.ravenwolf.org`). Defaults to `auto` which attempts to detect from domain          | No       | `auto`                |
+| `token`                  | Authentication token for remote URLs                                                                                                                                                                              | No       | `${{ github.token }}` |
+| `version`                | Version to retrieve (or "Unreleased")                                                                                                                                                                             | No       | Latest version        |
+| `validation-level`       | Validation level: `none`, `warn`, or `error`                                                                                                                                                                      | No       | `none`                |
+| `validation-depth`       | Number of entries to validate                                                                                                                                                                                     | No       | `10`                  |
+| `config-file`            | Path to configuration file                                                                                                                                                                                        | No       | Auto-detect           |
+| `verbose`                | Enable debug logging for troubleshooting. Set to `true` to see detailed information about URL construction, repository type detection, and HTTP requests. Also respects `ACTIONS_STEP_DEBUG` environment variable | No       | `false`               |
+| `skip-certificate-check` | Ignore SSL certificate errors (useful for self-hosted instances with self-signed certificates). **WARNING**: This is a security risk and should only be used with trusted self-hosted instances                   | No       | `false`               |
+| `output-file`            | File path to write the changelog `changes` content to (e.g., `.release-notes.md`). Useful for passing long or special-character content to downstream actions that accept a file path instead of an inline string | No       | -                     |
 
 ## Permissions
 
@@ -150,37 +153,125 @@ No special permissions are required. Typical workflows need `contents: read` for
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
-| `version` | Version number found (e.g., `2.0.0`) |
-| `date` | Release date (e.g., `2020-08-22`) |
-| `status` | Status: `prereleased`, `released`, `unreleased`, `yanked`, or `nofound` (when CHANGELOG.md is not found) |
-| `changes` | Changelog entry content |
+| Output            | Description                                                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`         | Version number found (e.g., `2.0.0`)                                                                                                                                      |
+| `date`            | Release date (e.g., `2020-08-22`)                                                                                                                                         |
+| `status`          | Status: `prereleased`, `released`, `unreleased`, `yanked`, or `nofound` (when CHANGELOG.md is not found)                                                                  |
+| `changes`         | Full changelog entry content (multiline markdown)                                                                                                                         |
+| `changes-escaped` | Changes with newlines replaced by the literal string `\n` and carriage returns stripped. Safe for single-line action parameters such as `commit_message` or `tag_message` |
+| `changes-file`    | Absolute path of the file the changes were written to. Only set when `output-file` input is provided                                                                      |
+
+## Handling Long or Special-Character Changelog Notes
+
+Inline GitHub Actions expressions (`${{ steps.id.outputs.changes }}`) have several compounding limitations when used in downstream action parameters:
+
+| Problem | Impact |
+|---------|--------|
+| **Newlines** | Break YAML value parsing in `with:` blocks |
+| **Backticks / `$()`** | Trigger shell command substitution in composite actions that embed expressions directly in `run:` steps |
+| **`${{` sequences** | May be re-evaluated as GitHub expressions in certain YAML positions |
+| **Size** | GitHub Actions expression values and environment variables have OS-level size limits (~32 KB). Large changelog entries can exceed them |
+
+There is no inline expression approach that is simultaneously safe from all of these and free of size limits. The correct solutions depend on what the downstream action accepts.
+
+### `changes-escaped` — for short, code-free single-line parameters
+
+`changes-escaped` replaces all newlines with the literal two-character sequence `\n`, producing a single-line value. It is appropriate for short parameters like `commit_message` where the notes are unlikely to contain backticks or exceed a few hundred characters.
+
+> **Limitation:** `changes-escaped` does not escape backticks or `$()` sequences. If your changelog entries contain inline code examples (e.g., `` `npm install` ``), those characters may cause shell expansion issues in composite actions. For entries with code, use `output-file` instead.
+
+```yaml
+- name: Get Changelog Entry
+  id: changelog
+  uses: LiquidLogicLabs/changelog-parser-action@v2
+  with:
+    version: ${{ steps.tagName.outputs.current_version }}
+
+# Safe only for short, code-free entries
+- name: Commit changelog
+  uses: stefanzweifel/git-auto-commit-action@v5
+  with:
+    commit_message: 'chore(release): ${{ steps.changelog.outputs.version }} ${{ steps.changelog.outputs.changes-escaped }}'
+```
+
+For `commit_message` specifically, using only the version avoids all of these issues entirely:
+
+```yaml
+commit_message: 'chore(release): ${{ steps.changelog.outputs.version }}'
+```
+
+### `output-file` — the safe approach for full notes and tag messages
+
+`output-file` writes the raw changelog content to a file on disk before any other steps run. The content never passes through YAML expression substitution or shell expansion, so there are no size limits, no injection risks, and no escaping concerns.
+
+**For actions that accept a file path** (releases, PR bodies):
+
+```yaml
+- name: Get Changelog Entry
+  id: changelog
+  uses: LiquidLogicLabs/changelog-parser-action@v2
+  with:
+    version: ${{ steps.tagName.outputs.current_version }}
+    output-file: .release-notes.md
+
+- name: Create Release
+  uses: LiquidLogicLabs/git-action-release@v2
+  with:
+    tag: v${{ steps.changelog.outputs.version }}
+    body_path: ${{ steps.changelog.outputs.changes-file }}
+```
+
+**For tag messages** (reading the file directly in a `run:` step avoids all inline expression issues):
+
+```yaml
+- name: Get Changelog Entry
+  id: changelog
+  uses: LiquidLogicLabs/changelog-parser-action@v2
+  with:
+    version: ${{ steps.tagName.outputs.current_version }}
+    output-file: .release-notes.md
+
+- name: Create annotated tag with full release notes
+  env:
+    TAG: v${{ steps.changelog.outputs.version }}
+    NOTES_FILE: ${{ steps.changelog.outputs.changes-file }}
+  run: |
+    git tag -a "$TAG" -F "$NOTES_FILE"
+    git push origin "$TAG"
+```
+
+Reading the file via `$NOTES_FILE` in a `run:` step is safe regardless of content size or special characters, because the shell reads the file from disk rather than expanding an expression value.
 
 ## Supported URL Formats
 
 ### GitHub
+
 - **Cloud**: `https://raw.githubusercontent.com/owner/repo/branch/CHANGELOG.md`
 - **Blob (auto-converted)**: `https://github.com/owner/repo/blob/branch/CHANGELOG.md`
 - **Enterprise**: `https://your-github.com/owner/repo/blob/branch/CHANGELOG.md`
 
 ### GitLab
+
 - **Raw**: `https://gitlab.com/owner/repo/-/raw/branch/CHANGELOG.md`
 - **Blob (auto-converted)**: `https://gitlab.com/owner/repo/-/blob/branch/CHANGELOG.md`
 - **Self-hosted**: `https://your-gitlab.com/owner/repo/-/blob/branch/CHANGELOG.md`
 
 ### Bitbucket
+
 - **Raw**: `https://bitbucket.org/owner/repo/raw/branch/CHANGELOG.md`
 - **Blob (auto-converted)**: `https://bitbucket.org/owner/repo/src/branch/CHANGELOG.md`
 - **Server/Data Center**: `https://your-bitbucket.com/owner/repo/src/branch/CHANGELOG.md`
 
 ### Gitea
+
 - **Raw**: `https://gitea.com/owner/repo/raw/branch/CHANGELOG.md`
 - **Blob (auto-converted)**: `https://gitea.com/owner/repo/src/branch/CHANGELOG.md`
 - **Self-hosted**: `https://your-gitea.com/owner/repo/src/branch/CHANGELOG.md`
 - **Custom domain**: For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), use `repo-type: 'gitea'` to ensure correct URL format
 
 ### Any HTTP Server
+
 - `https://example.com/path/to/CHANGELOG.md`
 
 ## Configuration File
@@ -211,11 +302,13 @@ Action inputs take precedence over configuration file values.
 ## Validation
 
 The action can validate changelog entries for:
+
 - Semantic versioning format
 - Date format (YYYY-MM-DD)
 - Empty entries
 
 Set `validation-level` to:
+
 - `none`: No validation (default)
 - `warn`: Print warnings but don't fail
 - `error`: Fail the action if validation errors are found
@@ -285,4 +378,3 @@ MIT
 
 - Based on [changelog-reader-action](https://github.com/mindsers/changelog-reader-action) by [mindsers](https://github.com/mindsers)
 - Follows the [Keep a Changelog](https://keepachangelog.com/) standard
-

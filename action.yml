@@ -41,6 +41,10 @@ inputs:
     description: 'Skip TLS certificate verification (useful for self-hosted instances with self-signed certificates). WARNING: This is a security risk and should only be used with trusted self-hosted instances'
     required: false
     default: 'false'
+  output-file:
+    description: 'Optional file path to write the changelog changes content to (e.g., .release-notes.md). Use this to avoid YAML interpolation issues when passing long or special-character content to downstream actions'
+    required: false
+    default: ''
 outputs:
   version:
     description: 'Version of the log entry found (e.g., 2.0.0)'
@@ -50,10 +54,13 @@ outputs:
     description: 'Status of the log entry found (prereleased, released, unreleased, or yanked)'
   changes:
     description: 'Description text of the log entry found'
+  changes-escaped:
+    description: 'Changes text with newlines replaced by the literal string \n and carriage returns stripped, safe for single-line action parameters such as commit_message or tag_message'
+  changes-file:
+    description: 'Path to the file the changes were written to. Only set when output-file input is provided'
 runs:
   using: 'node20'
   main: 'dist/index.js'
 branding:
   icon: 'file-text'
   color: 'blue'
-

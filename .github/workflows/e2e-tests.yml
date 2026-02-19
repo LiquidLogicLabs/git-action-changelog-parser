@@ -1,8 +1,8 @@
 name: E2E Tests
 
 on:
-  workflow_call:  # Called by release workflow
-  workflow_dispatch:  # Manual trigger only
+  workflow_call: # Called by release workflow
+  workflow_dispatch: # Manual trigger only
 
 concurrency:
   group: ${{ github.workflow || 'E2E Tests' }}-${{ github.ref || github.sha }}
@@ -93,6 +93,46 @@ jobs:
             echo "✅ Correctly returned 'nofound' status"
           fi
 
+      - name: Verify changes-escaped is a single line with no literal newlines
+        env:
+          CHANGES_ESCAPED: ${{ steps.changelog-local.outputs.changes-escaped }}
+        run: |
+          if [ -z "$CHANGES_ESCAPED" ]; then
+            echo "❌ changes-escaped is empty"
+            exit 1
+          fi
+          LINES=$(printf '%s' "$CHANGES_ESCAPED" | wc -l)
+          if [ "$LINES" -gt 0 ]; then
+            echo "❌ changes-escaped contains $LINES newline(s), expected 0"
+            exit 1
+          fi
+          echo "✅ changes-escaped is a single line (no literal newlines)"
+
+      - name: Test output-file writes changelog to a file
+        id: changelog-output-file
+        uses: ./
+        with:
+          path: ./CHANGELOG.md
+          version: ${{ github.ref_type == 'tag' && '1.0.6' || '2.0.0' }}
+          output-file: .release-notes.md
+
+      - name: Verify output-file and changes-file
+        run: |
+          CHANGES_FILE="${{ steps.changelog-output-file.outputs.changes-file }}"
+          if [ -z "$CHANGES_FILE" ]; then
+            echo "❌ changes-file output is empty"
+            exit 1
+          fi
+          if [ ! -f "$CHANGES_FILE" ]; then
+            echo "❌ File not found at changes-file path: $CHANGES_FILE"
+            exit 1
+          fi
+          if [ ! -s "$CHANGES_FILE" ]; then
+            echo "❌ File at changes-file path is empty: $CHANGES_FILE"
+            exit 1
+          fi
+          echo "✅ changes-file points to a non-empty file: $CHANGES_FILE"
+
       - name: E2E Test Summary
         run: |
           echo "## ✅ E2E Tests Complete" >> $GITHUB_STEP_SUMMARY
@@ -105,3 +145,5 @@ jobs:
           echo "- ✅ repoUrl input" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Repository root URL in path" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ 404 handling (nofound status)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ changes-escaped single-line output" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ output-file and changes-file output" >> $GITHUB_STEP_SUMMARY

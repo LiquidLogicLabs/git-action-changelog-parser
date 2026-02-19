@@ -25694,13 +25694,18 @@ function getInputs() {
     const repoTypeInput = (core.getInput('repo-type') || 'auto');
     const token = core.getInput('token') || process.env.GITHUB_TOKEN;
     const version = core.getInput('version');
-    const validationLevel = (core.getInput('validation-level') || 'none');
+    const validationLevel = (core.getInput('validation-level') ||
+        'none');
     const validationDepth = parseInt(core.getInput('validation-depth') || '10', 10);
     const configFile = core.getInput('config-file');
     const verboseInput = core.getBooleanInput('verbose');
-    const debugMode = (typeof core.isDebug === 'function' && core.isDebug()) || parseBoolean(process.env.ACTIONS_STEP_DEBUG) || parseBoolean(process.env.ACTIONS_RUNNER_DEBUG) || parseBoolean(process.env.RUNNER_DEBUG);
+    const debugMode = (typeof core.isDebug === 'function' && core.isDebug()) ||
+        parseBoolean(process.env.ACTIONS_STEP_DEBUG) ||
+        parseBoolean(process.env.ACTIONS_RUNNER_DEBUG) ||
+        parseBoolean(process.env.RUNNER_DEBUG);
     const verbose = verboseInput || debugMode;
     const skipCertificateCheck = core.getBooleanInput('skip-certificate-check');
+    const outputFile = core.getInput('output-file');
     if (verboseInput && !process.env.ACTIONS_STEP_DEBUG) {
         process.env.ACTIONS_STEP_DEBUG = 'true';
     }
@@ -25717,6 +25722,7 @@ function getInputs() {
         verbose,
         debugMode,
         skipCertificateCheck,
+        outputFile,
         hasPathInput: path !== '',
         hasRepoUrlInput: repoUrl !== '',
         hasRefInput: refInput !== '',
@@ -25769,6 +25775,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
+const fs = __importStar(__nccwpck_require__(9896));
+const nodePath = __importStar(__nccwpck_require__(6928));
 const config_1 = __nccwpck_require__(2973);
 const path_handler_1 = __nccwpck_require__(9193);
 const parser_1 = __nccwpck_require__(7196);
@@ -25786,6 +25794,7 @@ async function run() {
         const validationDepth = inputs.validationDepth;
         const configFileInput = inputs.configFile;
         const ignoreCertErrors = inputs.skipCertificateCheck;
+        const outputFile = inputs.outputFile;
         const logger = new logger_1.Logger(inputs.verbose, inputs.debugMode);
         logger.verboseInfo('=== Changelog Parser Action Debug Mode ===');
         logger.verboseInfo(`Inputs received:`);
@@ -25884,7 +25893,8 @@ async function run() {
         catch (error) {
             logger.debug(`Error reading changelog: ${error instanceof Error ? error.message : String(error)}`);
             // Check if it's a 404 error (file not found)
-            if (error instanceof Error && (error.message.includes('404') || error.message.includes('not found'))) {
+            if (error instanceof Error &&
+                (error.message.includes('404') || error.message.includes('not found'))) {
                 core.info('CHANGELOG.md not found at the specified location');
                 core.setOutput('version', '');
                 core.setOutput('date', '');
@@ -25935,7 +25945,7 @@ async function run() {
         logger.verboseInfo(`Searching for version: ${version || '(latest)'}`);
         const entry = (0, parser_1.findVersionEntry)(parsed, version);
         if (!entry) {
-            logger.verboseInfo(`Version entry not found. Available versions: ${parsed.entries.map(e => e.version).join(', ')}`);
+            logger.verboseInfo(`Version entry not found. Available versions: ${parsed.entries.map((e) => e.version).join(', ')}`);
             const versionMsg = version
                 ? `Version "${version}" not found`
                 : 'No version entry found';
@@ -25947,6 +25957,17 @@ async function run() {
         core.setOutput('date', entry.date || '');
         core.setOutput('status', entry.status);
         core.setOutput('changes', entry.changes);
+        const changesEscaped = entry.changes
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+            .replace(/\n/g, '\\n');
+        core.setOutput('changes-escaped', changesEscaped);
+        if (outputFile) {
+            const resolvedPath = nodePath.resolve(outputFile);
+            await fs.promises.writeFile(resolvedPath, entry.changes, 'utf8');
+            core.info(`Changelog changes written to: ${resolvedPath}`);
+            core.setOutput('changes-file', resolvedPath);
+        }
         core.info('Changelog parsed successfully');
     }
     catch (error) {
