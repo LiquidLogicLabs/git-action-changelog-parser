@@ -1,3 +1,12 @@
+# [2.1.0](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v2.0.1...v2.1.0) (2026-02-19)
+
+
+### Features
+
+* add changes-escaped output and output-file input for safe downstream use ([21de2b6](https://github.com/LiquidLogicLabs/git-action-changelog-parser/commit/21de2b66aad37d11f469833e53400e5e2bf64009))
+
+
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
