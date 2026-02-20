@@ -9,7 +9,7 @@
     "package": "npm run build",
     "test": "jest",
     "test:unit": "jest --testPathIgnorePatterns='integration|e2e'",
-    "test:integration": "jest --testPathPattern=integration --passWithNoTests",
+    "test:integration": "jest --testPathPatterns=integration --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:act": "act --container-options \"--user $(id -u):$(id -g)\" --env-file .act.env --var-file .act.vars --secret-file .act.secrets workflow_dispatch -W .github/workflows/test.yml --eventpath .github/workflows/.act/event-workflow_call.json",
