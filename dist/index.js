@@ -25807,6 +25807,7 @@ async function run() {
         logger.verboseInfo(`  validation-depth: ${validationDepth}`);
         logger.verboseInfo(`  config-file: ${configFileInput || '(empty)'}`);
         logger.verboseInfo(`  token: ${token ? '***' : '(empty)'}`);
+        logger.verboseInfo(`  output-file: ${outputFile || '(empty)'}`);
         // Load configuration if provided
         let config = {
             validation_level: validationLevel,
@@ -25964,9 +25965,22 @@ async function run() {
         core.setOutput('changes-escaped', changesEscaped);
         if (outputFile) {
             const resolvedPath = nodePath.resolve(outputFile);
-            await fs.promises.writeFile(resolvedPath, entry.changes, 'utf8');
-            core.info(`Changelog changes written to: ${resolvedPath}`);
-            core.setOutput('changes-file', resolvedPath);
+            logger.verboseInfo(`Writing changes to output file:`);
+            logger.verboseInfo(`  output-file input: ${outputFile}`);
+            logger.verboseInfo(`  resolved path: ${resolvedPath}`);
+            logger.debug(`  changes length: ${entry.changes.length} characters`);
+            try {
+                await fs.promises.writeFile(resolvedPath, entry.changes, 'utf8');
+                core.info(`Changelog changes written to: ${resolvedPath}`);
+                logger.verboseInfo(`  changes-file output set to: ${resolvedPath}`);
+                core.setOutput('changes-file', resolvedPath);
+            }
+            catch (writeError) {
+                throw new Error(`Failed to write output file "${resolvedPath}": ${writeError instanceof Error ? writeError.message : String(writeError)}`);
+            }
+        }
+        else {
+            logger.verboseInfo('No output-file specified, skipping file write');
         }
         core.info('Changelog parsed successfully');
     }
