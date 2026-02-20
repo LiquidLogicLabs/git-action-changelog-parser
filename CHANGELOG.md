@@ -1,3 +1,13 @@
+## [2.1.1](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v2.1.0...v2.1.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* improve output-file logging and error handling ([641f7d7](https://github.com/LiquidLogicLabs/git-action-changelog-parser/commit/641f7d79821e8af5a939e74410c788966d4596f7))
+* update deprecated Jest --testPathPattern to --testPathPatterns ([4e30ee8](https://github.com/LiquidLogicLabs/git-action-changelog-parser/commit/4e30ee805abef0ecfb98c82545a47e52046e3225))
+
+
+
 # [2.1.0](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v2.0.1...v2.1.0) (2026-02-19)
 
 
