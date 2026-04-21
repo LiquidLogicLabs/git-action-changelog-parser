@@ -1,3 +1,12 @@
+## [2.1.2](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v2.1.1...v2.1.2) (2026-04-21)
+
+
+### Bug Fixes
+
+* correct action runtime to node24 ([c13f003](https://github.com/LiquidLogicLabs/git-action-changelog-parser/commit/c13f003068768295608d2e13a941db82bc17fd11))
+
+
+
 ## [2.1.1](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v2.1.0...v2.1.1) (2026-02-20)
 
 
