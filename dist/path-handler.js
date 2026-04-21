@@ -42,6 +42,16 @@ exports.readContent = readContent;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const https = __importStar(require("https"));
+// Lazy require of @actions/core so that test files mocking fs (without fs.constants)
+// don't trigger transitive import crashes from @actions/io. The gate also ensures we
+// pay the require cost only when debug output is actually being emitted.
+function debugLog(message) {
+    if (process.env.ACTIONS_STEP_DEBUG !== 'true')
+        return;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const core = require('@actions/core');
+    core.debug(message);
+}
 /**
  * Converts blob URLs to raw URLs for various git platforms
  */
@@ -147,15 +157,6 @@ function detectRepoType(repoUrl, repoType = 'auto') {
  * Constructs CHANGELOG.md URL from repository URL and ref
  */
 function constructChangelogUrl(repoUrl, ref, repoType = 'auto') {
-    // Lazy import core for debug logging (only if ACTIONS_STEP_DEBUG is set)
-    const shouldDebug = process.env.ACTIONS_STEP_DEBUG === 'true';
-    const debugLog = (message) => {
-        if (shouldDebug) {
-            // Use console.log for debug since we can't easily import core here synchronously
-            // This will show up in debug logs when ACTIONS_STEP_DEBUG is enabled
-            console.log(`::debug::${message}`);
-        }
-    };
     debugLog(`constructChangelogUrl called with:`);
     debugLog(`  repoUrl: ${repoUrl}`);
     debugLog(`  ref: ${ref}`);
@@ -218,12 +219,6 @@ async function readContent(pathOrUrl, token, ignoreCertErrors = false) {
  * Fetches content from a remote URL
  */
 async function fetchRemoteUrl(url, token, ignoreCertErrors = false) {
-    const shouldDebug = process.env.ACTIONS_STEP_DEBUG === 'true';
-    const debugLog = (message) => {
-        if (shouldDebug) {
-            console.log(`::debug::${message}`);
-        }
-    };
     // Convert blob URLs to raw URLs
     const rawUrl = convertBlobToRaw(url);
     if (url !== rawUrl) {

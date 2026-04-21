@@ -44,6 +44,9 @@ function getInputs() {
     const refInput = core.getInput('ref');
     const repoTypeInput = (core.getInput('repo-type') || 'auto');
     const token = core.getInput('token') || process.env.GITHUB_TOKEN;
+    if (token) {
+        core.setSecret(token);
+    }
     const version = core.getInput('version');
     const validationLevel = (core.getInput('validation-level') ||
         'none');
