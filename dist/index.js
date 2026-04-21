@@ -26423,7 +26423,6 @@ const https = __importStar(__nccwpck_require__(5692));
 function debugLog(message) {
     if (process.env.ACTIONS_STEP_DEBUG !== 'true')
         return;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const core = __nccwpck_require__(7484);
     core.debug(message);
 }

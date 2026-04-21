@@ -48,7 +48,6 @@ const https = __importStar(require("https"));
 function debugLog(message) {
     if (process.env.ACTIONS_STEP_DEBUG !== 'true')
         return;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const core = require('@actions/core');
     core.debug(message);
 }

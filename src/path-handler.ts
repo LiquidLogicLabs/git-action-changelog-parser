@@ -7,7 +7,6 @@ import * as https from 'https';
 // pay the require cost only when debug output is actually being emitted.
 function debugLog(message: string): void {
   if (process.env.ACTIONS_STEP_DEBUG !== 'true') return;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const core = require('@actions/core');
   core.debug(message);
 }
