@@ -1,5 +1,6 @@
 name: 'Changelog Parser'
 description: 'Reads and parses CHANGELOG.md files from local paths or remote URLs, following the Keep a Changelog standard'
+author: 'LiquidLogicLabs'
 inputs:
   path:
     description: 'Path to changelog file or URL (defaults to ./CHANGELOG.md). Supports local paths and remote URLs from any source'
