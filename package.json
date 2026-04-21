@@ -43,7 +43,7 @@
   "author": "LiquidLogicLabs",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.11.1"
+    "@actions/core": "^2.0.3"
   },
   "overrides": {
     "test-exclude": "^7.0.1"
