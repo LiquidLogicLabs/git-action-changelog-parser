@@ -59,7 +59,7 @@ outputs:
   changes-file:
     description: 'Path to the file the changes were written to. Only set when output-file input is provided'
 runs:
-  using: 'node22'
+  using: 'node24'
   main: 'dist/index.js'
 branding:
   icon: 'file-text'
