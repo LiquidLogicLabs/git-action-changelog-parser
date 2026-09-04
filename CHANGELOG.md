@@ -1,3 +1,12 @@
+## [2.1.4](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v2.1.3...v2.1.4) (2026-09-04)
+
+
+### Bug Fixes
+
+* **lint:** quote eslint glob so intent is explicit ([f0874f3](https://github.com/LiquidLogicLabs/git-action-changelog-parser/commit/f0874f381651bd5058501e6e63b36aee85d5dc47))
+
+
+
 ## [2.1.3](https://github.com/LiquidLogicLabs/git-action-changelog-parser/compare/v2.1.2...v2.1.3) (2026-07-05)
 
 
