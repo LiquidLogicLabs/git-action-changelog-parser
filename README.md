@@ -1,6 +1,6 @@
 # Changelog Parser Action
 
-[![CI](https://github.com/LiquidLogicLabs/changelog-parser-action/actions/workflows/ci.yml/badge.svg)](https://github.com/LiquidLogicLabs/changelog-parser-action/actions/workflows/ci.yml)
+[![CI](https://github.com/LiquidLogicLabs/git-action-changelog-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/LiquidLogicLabs/git-action-changelog-parser/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 
@@ -31,7 +31,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     path: ./CHANGELOG.md
@@ -42,7 +42,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Remote URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     path: 'https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md'
@@ -54,7 +54,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitHub Blob URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     path: 'https://github.com/owner/repo/blob/main/CHANGELOG.md'
@@ -65,7 +65,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitLab
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     path: 'https://gitlab.com/owner/repo/-/raw/main/CHANGELOG.md'
@@ -76,7 +76,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Gitea
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     path: 'https://your-gitea.com/owner/repo/src/branch/main/CHANGELOG.md'
@@ -90,7 +90,7 @@ For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), you can exp
 
 ```yaml
 - name: Read Changelog from Custom Gitea Domain
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     repo-url: 'https://git.ravenwolf.org/owner/repo'
@@ -106,7 +106,7 @@ You can provide a repository URL and the action will automatically fetch `CHANGE
 
 ```yaml
 - name: Read Changelog from Repository URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     repo-url: 'https://github.com/owner/repo'
@@ -120,7 +120,7 @@ Alternatively, you can pass the repository root URL directly as the `path` input
 
 ```yaml
 - name: Read Changelog from Repo Root URL
-  uses: LiquidLogicLabs/changelog-parser-action@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v1
   id: changelog
   with:
     path: 'https://github.com/owner/repo'
@@ -184,7 +184,7 @@ There is no inline expression approach that is simultaneously safe from all of t
 ```yaml
 - name: Get Changelog Entry
   id: changelog
-  uses: LiquidLogicLabs/changelog-parser-action@v2
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   with:
     version: ${{ steps.tagName.outputs.current_version }}
 
@@ -210,7 +210,7 @@ commit_message: 'chore(release): ${{ steps.changelog.outputs.version }}'
 ```yaml
 - name: Get Changelog Entry
   id: changelog
-  uses: LiquidLogicLabs/changelog-parser-action@v2
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   with:
     version: ${{ steps.tagName.outputs.current_version }}
     output-file: .release-notes.md
@@ -227,7 +227,7 @@ commit_message: 'chore(release): ${{ steps.changelog.outputs.version }}'
 ```yaml
 - name: Get Changelog Entry
   id: changelog
-  uses: LiquidLogicLabs/changelog-parser-action@v2
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   with:
     version: ${{ steps.tagName.outputs.current_version }}
     output-file: .release-notes.md
@@ -337,7 +337,7 @@ jobs:
 
       - name: Get Changelog Entry
         id: changelog_reader
-        uses: LiquidLogicLabs/changelog-parser-action@v1
+        uses: LiquidLogicLabs/git-action-changelog-parser@v1
         with:
           validation-level: 'warn'
           version: ${{ steps.tagName.outputs.current_version }}

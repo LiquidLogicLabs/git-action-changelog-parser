@@ -18,75 +18,96 @@ jobs:
     # Run action from committed dist only (no build). Ensures E2E fails if dist is unbundled.
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # No step in this job pushes; the credential is not needed.
+          persist-credentials: false
 
       - name: Test local changelog parsing
         id: changelog-local
-        uses: ./
+        uses: ./  # zizmor: ignore[self-repository] — local ACTION reference under test, not a reusable-workflow call; $/ does not apply
         with:
           path: ./CHANGELOG.md
           # Use a version that exists in this repo's CHANGELOG (no ## [Unreleased] section; 2.0.0 is first section on branch, 1.0.6 on tag)
           version: ${{ github.ref_type == 'tag' && '1.0.6' || '2.0.0' }}
 
       - name: Display local outputs
+        env:
+          Z_CHANGELOG_LOCAL_OUTPUTS_VERSION: ${{ steps.changelog-local.outputs.version }}
+          Z_CHANGELOG_LOCAL_OUTPUTS_DATE: ${{ steps.changelog-local.outputs.date }}
+          Z_CHANGELOG_LOCAL_OUTPUTS_STATUS: ${{ steps.changelog-local.outputs.status }}
         run: |
-          echo "Version: ${{ steps.changelog-local.outputs.version }}"
-          echo "Date: ${{ steps.changelog-local.outputs.date }}"
-          echo "Status: ${{ steps.changelog-local.outputs.status }}"
+          echo "Version: ${Z_CHANGELOG_LOCAL_OUTPUTS_VERSION}"
+          echo "Date: ${Z_CHANGELOG_LOCAL_OUTPUTS_DATE}"
+          echo "Status: ${Z_CHANGELOG_LOCAL_OUTPUTS_STATUS}"
 
       - name: Test with GitHub blob URL (auto-converted)
         id: changelog-blob
-        uses: ./
+        uses: ./  # zizmor: ignore[self-repository] — local ACTION reference under test, not a reusable-workflow call; $/ does not apply
         with:
           path: 'https://github.com/traefik/traefik/blob/v3.6/CHANGELOG.md'
           version: 'v3.6.5'
 
       - name: Display blob URL outputs
+        env:
+          Z_CHANGELOG_BLOB_OUTPUTS_VERSION: ${{ steps.changelog-blob.outputs.version }}
+          Z_CHANGELOG_BLOB_OUTPUTS_DATE: ${{ steps.changelog-blob.outputs.date }}
+          Z_CHANGELOG_BLOB_OUTPUTS_STATUS: ${{ steps.changelog-blob.outputs.status }}
         run: |
-          echo "Version: ${{ steps.changelog-blob.outputs.version }}"
-          echo "Date: ${{ steps.changelog-blob.outputs.date }}"
-          echo "Status: ${{ steps.changelog-blob.outputs.status }}"
+          echo "Version: ${Z_CHANGELOG_BLOB_OUTPUTS_VERSION}"
+          echo "Date: ${Z_CHANGELOG_BLOB_OUTPUTS_DATE}"
+          echo "Status: ${Z_CHANGELOG_BLOB_OUTPUTS_STATUS}"
 
       - name: Test with repoUrl input
         id: changelog-repo-url
-        uses: ./
+        uses: ./  # zizmor: ignore[self-repository] — local ACTION reference under test, not a reusable-workflow call; $/ does not apply
         with:
           repo-url: 'https://github.com/traefik/traefik'
           ref: 'v3.6'
           version: 'v3.6.5'
 
       - name: Display repoUrl outputs
+        env:
+          Z_CHANGELOG_REPO_URL_OUTPUTS_VERSION: ${{ steps.changelog-repo-url.outputs.version }}
+          Z_CHANGELOG_REPO_URL_OUTPUTS_DATE: ${{ steps.changelog-repo-url.outputs.date }}
+          Z_CHANGELOG_REPO_URL_OUTPUTS_STATUS: ${{ steps.changelog-repo-url.outputs.status }}
         run: |
-          echo "Version: ${{ steps.changelog-repo-url.outputs.version }}"
-          echo "Date: ${{ steps.changelog-repo-url.outputs.date }}"
-          echo "Status: ${{ steps.changelog-repo-url.outputs.status }}"
+          echo "Version: ${Z_CHANGELOG_REPO_URL_OUTPUTS_VERSION}"
+          echo "Date: ${Z_CHANGELOG_REPO_URL_OUTPUTS_DATE}"
+          echo "Status: ${Z_CHANGELOG_REPO_URL_OUTPUTS_STATUS}"
 
       - name: Test with repository root URL in path
         id: changelog-repo-root
-        uses: ./
+        uses: ./  # zizmor: ignore[self-repository] — local ACTION reference under test, not a reusable-workflow call; $/ does not apply
         with:
           path: 'https://github.com/traefik/traefik'
           ref: 'v3.6'
           version: 'v3.6.5'
 
       - name: Display repo root outputs
+        env:
+          Z_CHANGELOG_REPO_ROOT_OUTPUTS_VERSION: ${{ steps.changelog-repo-root.outputs.version }}
+          Z_CHANGELOG_REPO_ROOT_OUTPUTS_DATE: ${{ steps.changelog-repo-root.outputs.date }}
+          Z_CHANGELOG_REPO_ROOT_OUTPUTS_STATUS: ${{ steps.changelog-repo-root.outputs.status }}
         run: |
-          echo "Version: ${{ steps.changelog-repo-root.outputs.version }}"
-          echo "Date: ${{ steps.changelog-repo-root.outputs.date }}"
-          echo "Status: ${{ steps.changelog-repo-root.outputs.status }}"
+          echo "Version: ${Z_CHANGELOG_REPO_ROOT_OUTPUTS_VERSION}"
+          echo "Date: ${Z_CHANGELOG_REPO_ROOT_OUTPUTS_DATE}"
+          echo "Status: ${Z_CHANGELOG_REPO_ROOT_OUTPUTS_STATUS}"
 
       - name: Test 404 handling (nofound status)
         id: changelog-404
-        uses: ./
+        uses: ./  # zizmor: ignore[self-repository] — local ACTION reference under test, not a reusable-workflow call; $/ does not apply
         with:
           repo-url: 'https://github.com/traefik/traefik'
           ref: 'nonexistent-branch'
         continue-on-error: true
 
       - name: Display 404 outputs
+        env:
+          Z_CHANGELOG_404_OUTPUTS_STATUS: ${{ steps.changelog-404.outputs.status }}
         run: |
-          echo "Status: ${{ steps.changelog-404.outputs.status }}"
-          if [ "${{ steps.changelog-404.outputs.status }}" != "nofound" ]; then
+          echo "Status: ${Z_CHANGELOG_404_OUTPUTS_STATUS}"
+          if [ "${Z_CHANGELOG_404_OUTPUTS_STATUS}" != "nofound" ]; then
             echo "❌ Expected 'nofound' status for 404 case"
             exit 1
           else
@@ -110,15 +131,17 @@ jobs:
 
       - name: Test output-file writes changelog to a file
         id: changelog-output-file
-        uses: ./
+        uses: ./  # zizmor: ignore[self-repository] — local ACTION reference under test, not a reusable-workflow call; $/ does not apply
         with:
           path: ./CHANGELOG.md
           version: ${{ github.ref_type == 'tag' && '1.0.6' || '2.0.0' }}
           output-file: .release-notes.md
 
       - name: Verify output-file and changes-file
+        env:
+          Z_CHANGELOG_OUTPUT_FILE_OUTPUTS_CHANGES_FILE: ${{ steps.changelog-output-file.outputs.changes-file }}
         run: |
-          CHANGES_FILE="${{ steps.changelog-output-file.outputs.changes-file }}"
+          CHANGES_FILE="${Z_CHANGELOG_OUTPUT_FILE_OUTPUTS_CHANGES_FILE}"
           if [ -z "$CHANGES_FILE" ]; then
             echo "❌ changes-file output is empty"
             exit 1
@@ -135,15 +158,17 @@ jobs:
 
       - name: E2E Test Summary
         run: |
-          echo "## ✅ E2E Tests Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All E2E tests (action run from committed dist) passed successfully!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "E2E Tests (Packaged Action):" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Local changelog parsing" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ GitHub blob URL (auto-converted)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ repoUrl input" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Repository root URL in path" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ 404 handling (nofound status)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ changes-escaped single-line output" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ output-file and changes-file output" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## ✅ E2E Tests Complete"
+            echo ""
+            echo "All E2E tests (action run from committed dist) passed successfully!"
+            echo ""
+            echo "E2E Tests (Packaged Action):"
+            echo "- ✅ Local changelog parsing"
+            echo "- ✅ GitHub blob URL (auto-converted)"
+            echo "- ✅ repoUrl input"
+            echo "- ✅ Repository root URL in path"
+            echo "- ✅ 404 handling (nofound status)"
+            echo "- ✅ changes-escaped single-line output"
+            echo "- ✅ output-file and changes-file output"
+          } >> "$GITHUB_STEP_SUMMARY"
