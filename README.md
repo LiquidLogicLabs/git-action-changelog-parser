@@ -1,4 +1,4 @@
-# Changelog Parser Action
+# Git Changelog Parser
 
 [![CI](https://github.com/LiquidLogicLabs/git-action-changelog-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/LiquidLogicLabs/git-action-changelog-parser/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -31,7 +31,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
     path: ./CHANGELOG.md
@@ -42,7 +42,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Remote URL
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
     path: 'https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md'
@@ -54,7 +54,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitHub Blob URL
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
     path: 'https://github.com/owner/repo/blob/main/CHANGELOG.md'
@@ -65,7 +65,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from GitLab
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
     path: 'https://gitlab.com/owner/repo/-/raw/main/CHANGELOG.md'
@@ -76,7 +76,7 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ```yaml
 - name: Read Changelog from Gitea
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
     path: 'https://your-gitea.com/owner/repo/src/branch/main/CHANGELOG.md'
@@ -86,14 +86,14 @@ This action is inspired by and extends the functionality of [changelog-reader-ac
 
 ### Gitea Example with Custom Domain
 
-For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), you can explicitly specify the repository type:
+For Gitea instances with custom domains (e.g., `gitea.example.com`), you can explicitly specify the repository type:
 
 ```yaml
 - name: Read Changelog from Custom Gitea Domain
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
-    repo-url: 'https://git.ravenwolf.org/owner/repo'
+    repo-url: 'https://gitea.example.com/owner/repo'
     repo-type: 'gitea' # Explicitly specify Gitea for custom domains
     ref: 'main'
     version: '1.2.3'
@@ -106,7 +106,7 @@ You can provide a repository URL and the action will automatically fetch `CHANGE
 
 ```yaml
 - name: Read Changelog from Repository URL
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
     repo-url: 'https://github.com/owner/repo'
@@ -120,7 +120,7 @@ Alternatively, you can pass the repository root URL directly as the `path` input
 
 ```yaml
 - name: Read Changelog from Repo Root URL
-  uses: LiquidLogicLabs/git-action-changelog-parser@v1
+  uses: LiquidLogicLabs/git-action-changelog-parser@v2
   id: changelog
   with:
     path: 'https://github.com/owner/repo'
@@ -137,7 +137,7 @@ Both approaches work the same way - the action will automatically detect that it
 | `path`                   | Path to changelog file or URL. Can also be a repository root URL (e.g., `https://github.com/owner/repo`)                                                                                                          | No       | `./CHANGELOG.md`      |
 | `repo-url`               | Repository URL (e.g., `https://github.com/owner/repo`). When `path` is blank, CHANGELOG.md will be fetched from the root of this repository                                                                       | No       | -                     |
 | `ref`                    | Branch or ref to use when constructing CHANGELOG.md URL from `repo-url` or repository root URL in `path`                                                                                                          | No       | `main`                |
-| `repo-type`              | Repository platform type: `auto`, `github`, `gitea`, `gitlab`, or `bitbucket`. Use explicit type for custom domains (e.g., `git.ravenwolf.org`). Defaults to `auto` which attempts to detect from domain          | No       | `auto`                |
+| `repo-type`              | Repository platform type: `auto`, `github`, `gitea`, `gitlab`, or `bitbucket`. Use explicit type for custom domains (e.g., `gitea.example.com`). Defaults to `auto` which attempts to detect from domain          | No       | `auto`                |
 | `token`                  | Authentication token for remote URLs                                                                                                                                                                              | No       | `${{ github.token }}` |
 | `version`                | Version to retrieve (or "Unreleased")                                                                                                                                                                             | No       | Latest version        |
 | `validation-level`       | Validation level: `none`, `warn`, or `error`                                                                                                                                                                      | No       | `none`                |
@@ -268,7 +268,7 @@ Reading the file via `$NOTES_FILE` in a `run:` step is safe regardless of conten
 - **Raw**: `https://gitea.com/owner/repo/raw/branch/CHANGELOG.md`
 - **Blob (auto-converted)**: `https://gitea.com/owner/repo/src/branch/CHANGELOG.md`
 - **Self-hosted**: `https://your-gitea.com/owner/repo/src/branch/CHANGELOG.md`
-- **Custom domain**: For Gitea instances with custom domains (e.g., `git.ravenwolf.org`), use `repo-type: 'gitea'` to ensure correct URL format
+- **Custom domain**: For Gitea instances with custom domains (e.g., `gitea.example.com`), use `repo-type: 'gitea'` to ensure correct URL format
 
 ### Any HTTP Server
 
@@ -337,7 +337,7 @@ jobs:
 
       - name: Get Changelog Entry
         id: changelog_reader
-        uses: LiquidLogicLabs/git-action-changelog-parser@v1
+        uses: LiquidLogicLabs/git-action-changelog-parser@v2
         with:
           validation-level: 'warn'
           version: ${{ steps.tagName.outputs.current_version }}
