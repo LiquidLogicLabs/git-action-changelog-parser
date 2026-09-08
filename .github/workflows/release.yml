@@ -99,7 +99,7 @@ jobs:
           mode: "HYBRID"
           configurationJson: |
             {
-              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Pull Requests</summary>\n\n#{{PR_LIST}}\n</details>\n\n---\n\n### Usage\n\n```yaml\n- uses: LiquidLogicLabs/git-action-changelog-parser@${{ github.ref_name }}\n  with:\n    path: './CHANGELOG.md'\n    version: 'Unreleased'\n```\n\nFor more examples, see the [README](https://github.com/${{ github.repository }}#usage)."
+              "template": "#{{CHANGELOG}}\n\n---\n\n### Usage\n\n```yaml\n- uses: LiquidLogicLabs/git-action-changelog-parser@${{ github.ref_name }}\n  with:\n    path: './CHANGELOG.md'\n    version: 'Unreleased'\n```\n\nFor more examples, see the [README](https://github.com/${{ github.repository }}#usage)."
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
