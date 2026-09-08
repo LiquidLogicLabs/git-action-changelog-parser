@@ -1,4 +1,4 @@
-name: 'Changelog Parser'
+name: 'Git Changelog Parser'
 description: 'Reads and parses CHANGELOG.md files from local paths or remote URLs, following the Keep a Changelog standard'
 author: 'LiquidLogicLabs'
 inputs:
