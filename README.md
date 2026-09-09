@@ -219,7 +219,7 @@ commit_message: 'chore(release): ${{ steps.changelog.outputs.version }}'
   uses: LiquidLogicLabs/git-action-release@v2
   with:
     tag: v${{ steps.changelog.outputs.version }}
-    body_path: ${{ steps.changelog.outputs.changes-file }}
+    body-file: ${{ steps.changelog.outputs.changes-file }}
 ```
 
 **For tag messages** (reading the file directly in a `run:` step avoids all inline expression issues):
@@ -344,7 +344,7 @@ jobs:
           path: ./CHANGELOG.md
 
       - name: Create Release
-        uses: LiquidLogicLabs/git-action-release@v1
+        uses: LiquidLogicLabs/git-action-release@v2
         with:
           tag: ${{ steps.changelog_reader.outputs.version }}
           name: Release ${{ steps.changelog_reader.outputs.version }}
@@ -353,7 +353,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
           allow-updates: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Security
