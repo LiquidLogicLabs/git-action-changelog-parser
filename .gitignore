@@ -26,7 +26,6 @@ pnpm-debug.log*
 
 # IDE and editor files
 .idea/
-.bmad-core/
 .github/chatmodes/
 *.swp
 *.swo
@@ -43,3 +42,4 @@ coverage/
 .secrets
 .secrets.*
 .actrc.local
+_bmad-output/

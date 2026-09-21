@@ -1,0 +1,56 @@
+installation:
+  version: 6.12.0
+  installDate: 2026-09-21T15:58:21.232Z
+  lastUpdated: 2026-09-21T15:58:21.232Z
+  installShims: false
+modules:
+  - name: core
+    version: 6.12.0
+    installDate: 2026-09-21T15:58:19.145Z
+    lastUpdated: 2026-09-21T15:58:21.177Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: bmm
+    version: 6.12.0
+    installDate: 2026-09-21T15:58:19.864Z
+    lastUpdated: 2026-09-21T15:58:21.182Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: l3io-pm
+    version: main
+    installDate: 2026-09-21T15:58:20.398Z
+    lastUpdated: 2026-09-21T15:58:21.197Z
+    source: custom
+    npmPackage: null
+    repoUrl: https://github.com/ravensorb/bmad-extensions
+    channel: next
+  - name: l3io-arch
+    version: main
+    installDate: 2026-09-21T15:58:20.513Z
+    lastUpdated: 2026-09-21T15:58:21.203Z
+    source: custom
+    npmPackage: null
+    repoUrl: https://github.com/ravensorb/bmad-extensions
+    channel: next
+  - name: l3io-sec
+    version: main
+    installDate: 2026-09-21T15:58:20.549Z
+    lastUpdated: 2026-09-21T15:58:21.208Z
+    source: custom
+    npmPackage: null
+    repoUrl: https://github.com/ravensorb/bmad-extensions
+    channel: next
+  - name: l3io-util
+    version: main
+    installDate: 2026-09-21T15:58:20.754Z
+    lastUpdated: 2026-09-21T15:58:21.232Z
+    source: custom
+    npmPackage: null
+    repoUrl: https://github.com/ravensorb/bmad-extensions
+    channel: next
+ides:
+  - claude-code
+  - github-copilot
+  - cursor
